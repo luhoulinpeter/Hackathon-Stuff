@@ -12,6 +12,9 @@
  */
 using namespace std;
 
+/*
+ * Outputs "predictions" made by Neural Network
+ */
 int main() {
 
     return 1;
