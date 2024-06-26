@@ -17,16 +17,14 @@ using namespace std;
 
 int main () {
     /* Look-Up Dictionary */
-    map<vector<long double>, char> letterMap;
+    map<int, char> letterMap;
 
-    for (int i = 0; i < 52; ++i) {
-        vector<long double> key(52, 0.0); 
-        key[i] = 1.0; 
-
+    // Add elements to the map
+    for (int i = 1; i < 52; ++i) {
         if (i % 2 == 1) {
-            letterMap[key] = 'A' + (i - 1) / 2;  
+            letterMap[i] = 'A' + (i - 1) / 2;  // Uppercase letters for odd indices
         } else {
-            letterMap[key] = 'a' + (i - 2) / 2;  
+            letterMap[i] = 'a' + (i - 2) / 2;  // Lowercase letters for even indices
         }
     }
     
@@ -51,7 +49,7 @@ int main () {
     vector<long double> biasesL7;
 
     /* Parse Input Tensor */
-    Parser tensorParser("tensors/01out.txt");              
+    Parser tensorParser("tensors/01out.txt");               // Use "\\tensors\\01out.txt" for Windows
 
     // Parse to Vector and Matrix
     tensorParser.parseToVector(inputVector);
