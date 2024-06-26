@@ -1,11 +1,11 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * StartHack Hackathon HPC Neural Network on Digit Recognition Sponsered by QDX  *
- *                                   Authors                                     *
- *                      Carlvince, Lucas, Peter, Volodmyr                        *
- *                                                                               *
- *                    (SHORT DESCRIPTION OF NEURAL NETWORK)                      *
- *                                                                               *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *        StartHack Hackathon HPC Neural Network on Digit Recognition Sponsered by QDX       *
+ *                                          Authors                                          *
+ *                   Carlvince Tan, Lucas Yu, Peter Lu, Volodymyr Kazmirchuk                 *
+ *                                                                                           *
+ *                          (SHORT DESCRIPTION OF NEURAL NETWORK)                            *
+ *                                                                                           *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "reader.h"
 #include "model.h"

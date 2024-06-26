@@ -1,52 +1,53 @@
-File: 23out.txt,  guess='L'
-File: 39out.txt,  guess='T'
-File: 24out.txt,  guess='l'
-File: 42out.txt,  guess='u'
-File: 50out.txt,  guess='y'
-File: 21out.txt,  guess='K'
-File: 06out.txt,  guess='c'
-File: 46out.txt,  guess='w'
-File: 29out.txt,  guess='O'
-File: 02out.txt,  guess='a'
-File: 27out.txt,  guess='N'
-File: 25out.txt,  guess='M'
-File: 48out.txt,  guess='x'
-File: 16out.txt,  guess='h'
-File: 19out.txt,  guess='J'
-File: 43out.txt,  guess='V'
-File: 22out.txt,  guess='k'
-File: 31out.txt,  guess='P'
-File: 01out.txt,  guess='A'
-File: 14out.txt,  guess='g'
-File: 49out.txt,  guess='Y'
-File: 11out.txt,  guess='F'
-File: 28out.txt,  guess='n'
-File: 51out.txt,  guess='Z'
-File: 38out.txt,  guess='s'
-File: 05out.txt,  guess='C'
-File: 07out.txt,  guess='D'
-File: 09out.txt,  guess='E'
-File: 36out.txt,  guess='r'
-File: 08out.txt,  guess='d'
-File: 13out.txt,  guess='G'
-File: 37out.txt,  guess='S'
-File: 18out.txt,  guess='i'
-File: 12out.txt,  guess='f'
-File: 04out.txt,  guess='b'
-File: 10out.txt,  guess='e'
-File: 44out.txt,  guess='v'
-File: 35out.txt,  guess='R'
-File: 30out.txt,  guess='o'
-File: 26out.txt,  guess='m'
-File: 52out.txt,  guess='z'
-File: 15out.txt,  guess='H'
-File: 33out.txt,  guess='Q'
-File: 47out.txt,  guess='X'
-File: 45out.txt,  guess='W'
-File: 41out.txt,  guess='U'
-File: 32out.txt,  guess='p'
-File: 03out.txt,  guess='B'
-File: 17out.txt,  guess='I'
-File: 40out.txt,  guess='t'
-File: 34out.txt,  guess='q'
-File: 20out.txt,  guess='j'
+image_number, guess
+1, s
+2, V
+3, m
+4, q
+5, X
+6, a
+7, e
+8, r
+9, n
+10, l
+11, W
+12, f
+13, a
+14, b
+15, h
+16, d
+17, j
+18, U
+19, p
+20, Y
+21, g
+22, i
+23, c
+24, Z
+25, o
+26, T
+27, k
+28, A
+29, E
+30, M
+31, v
+32, S
+33, x
+34, Q
+35, F
+36, N
+37, R
+38, w
+39, L
+40, u
+41, J
+42, y
+43, P
+44, B
+45, D
+46, H
+47, O
+48, K
+49, t
+50, G
+51, C
+52, I
