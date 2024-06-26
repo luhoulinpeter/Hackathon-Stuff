@@ -12,6 +12,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <filesystem>
 
 using namespace std;
 
@@ -117,7 +118,7 @@ int main () {
             }
             cout << endl;
         }
-    } else if (1) {
+    } else if (0) {
         cout << "Parsed Biases L1:" << endl;            // Working
         for (auto& num : biasesL1) {
             cout << num << " ";
@@ -136,6 +137,15 @@ int main () {
     model.add_layer (25, v2D_to_a (weightsL5), v_to_a (biasesL5));
     model.add_layer (40, v2D_to_a (weightsL6), v_to_a (biasesL6));
     model.add_layer (52, v2D_to_a (weightsL7), v_to_a (biasesL7));
+    
+    string tensors_path = filesystem::current_path ().string () + "/tensors";
+    for (auto& entry : filesystem::directory_iterator (tensors_path)) {
+        cout << entry.path () << endl;
+        vector <long double> input;
+        Parser tensorParser (entry.path ().string ());
+        tensorParser.parseToVector (input);
+        cout << "Result: " << model.forward_pass (v_to_a (input)) << endl;
+    }
 
     return 1;
 }
