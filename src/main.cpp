@@ -36,16 +36,13 @@ double* v2D_to_a (const vector <vector <long double> >& weights) {
 
 int main () {
     /* Look-Up Dictionary */
-    map<vector<long double>, char> letterMap;
+    map<int, char> letterMap;
 
-    for (int i = 0; i < 52; ++i) {
-        vector<long double> key(52, 0.0); 
-        key[i] = 1.0; 
-
+    for (int i = 1; i < 52; ++i) {
         if (i % 2 == 1) {
-            letterMap[key] = 'A' + (i - 1) / 2;  
+            letterMap[i] = 'A' + (i - 1) / 2;  
         } else {
-            letterMap[key] = 'a' + (i - 2) / 2;  
+            letterMap[i] = 'a' + (i - 2) / 2;  
         }
     }
 
