@@ -96,38 +96,6 @@ int main () {
     weightsParser.parseBiases(biasesL6, 6);
     weightsParser.parseBiases(biasesL7, 7);
 
-    // Output parsed data (for testing purposes)
-    if (0) {
-        cout << "Parsed Input Vector:" << endl;         // Working
-        for (auto num : inputVector) {
-            cout << num << " ";
-        }
-        cout << endl;
-    } else if (0) {
-        cout << "Parsed Input Matrix:" << endl;         // Not working yet
-        for (auto& row : inputMatrix) {
-            for (auto& num : row) {
-                cout << num << " ";
-            }
-            cout << endl;
-        }
-    } else if (0) {
-        cout << "Parsed Weights L1:" << endl;           // Not working yet
-        for (auto& row : weightsL1) {
-            for (auto& num : row) {
-                cout << num << " ";
-            }
-            cout << endl;
-        }
-    } else if (0) {
-        cout << "Parsed Biases L1:" << endl;            // Working
-        for (auto& num : biasesL1) {
-            cout << num << " ";
-        }
-        cout << endl;
-    }
-
-    
     // Initialize model
     Model model (7, 225);
     // What a nice temporary solution!
