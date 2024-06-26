@@ -1,4 +1,7 @@
 #include "model.h"
+#include <cmath>
+#include <iostream>
+using namespace std;
 
 // Process current layer in forward propagation
 // Takes input to it and a flag whether it's the last layer in a model
@@ -13,9 +16,17 @@ void Model::Layer::process (double* input, bool is_output) {
 
     // Activate outputs
     if (is_output) {
-        // softmax activation
+        // Softmax
+        double exp_sum = 0;
+        for (int i = 0; i < neuron_count; i ++) {
+            exp_sum += exp (outputs [i]);  // Possible optimisation: use simpler exp
+        }
+        for (int i = 0; i < neuron_count; i ++) {
+            outputs [i] = exp (outputs [i]) / exp_sum;
+        }
     }
     else {
+        // ReLU
         for (int i = 0; i < neuron_count; i ++) {
             if (outputs [i] < 0) {
                 outputs [i] = 0;
@@ -66,7 +77,8 @@ int Model::forward_pass (double* input) {
     last_layer.process (layers [layer_count - 2].outputs, true);
 
     // Find maximum output and its position
-    int pos = 0, max = 0;
+    int pos = 0;
+    double max = 0;
     for (int i = 0; i < last_layer.neuron_count; i ++) {
         if (last_layer.outputs [i] > max) {
             max = last_layer.outputs [i];

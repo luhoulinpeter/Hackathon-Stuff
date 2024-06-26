@@ -37,7 +37,7 @@ double* v2D_to_a (const vector <vector <long double> >& weights) {
 }
 
 int main () {
-    /* Look-Up Dictionary */
+    // Look-Up Dictionary
     map<int, char> letterMap;
 
     for (int i = 1; i < 52; ++i) {
@@ -145,8 +145,12 @@ int main () {
         vector <long double> input;
         Parser tensorParser (entry.path ().string ());
         tensorParser.parseToVector (input);
-        cout << "Result: " << model.forward_pass (v_to_a (input)) << endl;
+        int res = model.forward_pass (v_to_a (input));
+        cout << "Result: " << (res % 2 ? char (97 + res / 2) : char (65 + res / 2)) << endl;
     }
+
+    //auto v = softmax ({1.3, 5.1, 2.2, 0.7, 1.1}, 5);
+    //for (auto k : v) { cout << k << ' ';} cout << endl;
 
     return 1;
 }

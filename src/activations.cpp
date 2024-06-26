@@ -16,7 +16,7 @@ vector<long double> softmax(vector<long double> input, int length) {
 
     // calculating output softmax array
     for (int i=0; i<length; i++) {
-        output[i] = input[i] / exp_sum;
+        output.push_back (exp (input[i]) / exp_sum);
     }
 
     return output;
