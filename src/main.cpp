@@ -107,17 +107,18 @@ int main () {
     model.add_layer (40, v2D_to_a (weightsL6), v_to_a (biasesL6));
     model.add_layer (52, v2D_to_a (weightsL7), v_to_a (biasesL7));
     
-    ofstream file ("results.csv");
+    ofstream file("results.csv");
+    file << "image_number, guess" << endl;
     string tensors_path = filesystem::current_path ().string () + "/tensors";
+    int image_number = 1;
     for (auto& entry : filesystem::directory_iterator (tensors_path)) {
         vector <long double> input;
         Parser tensorParser (entry.path ().string ());
         tensorParser.parseToVector (input);
         int res = model.forward_pass (v_to_a (input));
-        char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
-        string substr = entry.path ().string ().substr (tensors_path.size () + 1);
-        cout << "For \'" << substr <<  "\' the result is " << letter << endl;
-        file << "File: " << substr << ",  guess=\'" << letter << "\'" << endl;
+        cout << "Result: " << (res % 2 ? char (97 + res / 2) : char (65 + res / 2)) << endl;
+        file << image_number << ", " << letterMap[model.forward_pass (v_to_a (input))] << endl;
+        image_number++;
     }
     file.close ();
 
