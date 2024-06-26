@@ -22,10 +22,10 @@ public:
     void parseToVector(vector<long double> &vector);
 
     // Function: Parses values from file to a matrix
-    void parseToMatrix(vector<vector<long double>> &matrix, int dimX, int dimY);
+    void parseToMatrix(vector<vector<long double> > &matrix, int dimX, int dimY);
 
     // Function: Parses Weights from a file to a matrix
-    void parseWeights(vector<vector<long double>> &weights, int layer, int dimIn, int dimOut);
+    void parseWeights(vector<vector<long double> > &weights, int layer, int dimIn, int dimOut);
 
     // Function: Parses Biases from a file to a vector
     void parseBiases(vector<long double> &biases, int layer);

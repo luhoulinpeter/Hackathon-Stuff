@@ -3,6 +3,7 @@
  */
 #include "parser.h"
 
+// Constructor definition
 Parser::Parser(string fileName) {
     FILE_NAME = fileName;
 }
@@ -24,7 +25,7 @@ void Parser::parseToVector(vector<long double> &vector) {
     file.close();
 }
 
-void Parser::parseToMatrix(vector<vector<long double>> &matrix, int dimX, int dimY) {
+void Parser::parseToMatrix(vector<vector<long double> > &matrix, int dimX, int dimY) {
     ifstream file(FILE_NAME);
 
     string line;
@@ -46,7 +47,7 @@ void Parser::parseToMatrix(vector<vector<long double>> &matrix, int dimX, int di
     file.close();
 }
 
-void Parser::parseWeights(vector<vector<long double>> &weights, int layer, int dimIn, int dimOut) {
+void Parser::parseWeights(vector<vector<long double> > &weights, int layer, int dimIn, int dimOut) {
     ifstream file(FILE_NAME);
 
     string line;
@@ -73,7 +74,11 @@ void Parser::parseWeights(vector<vector<long double>> &weights, int layer, int d
     file.close();
 }
 
+<<<<<<< HEAD
 void Parser::parseBiases(vector<long double> &biases, int layer) {
+=======
+void Parser::parseBiases(vector<long double> &biases, int layer, int size) {
+>>>>>>> ddb0dbe (Recommit)
     ifstream file(FILE_NAME);
 
     string line;
@@ -85,9 +90,19 @@ void Parser::parseBiases(vector<long double> &biases, int layer) {
             stringstream stream(line);
             string token;
 
+<<<<<<< HEAD
             // Parse long doubles into vector
             while (getline(stream, token, ',')) {
                 biases.push_back(stold(token));
+=======
+            // Initialize biases vector with size
+            biases.resize(size);
+
+            // Parse long doubles into vector
+            int count = 0;
+            while (getline(stream, token, ',')) {
+                biases[count++] = stold(token);
+>>>>>>> ddb0dbe (Recommit)
             }
         }
     }
