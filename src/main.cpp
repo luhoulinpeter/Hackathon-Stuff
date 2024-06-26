@@ -19,7 +19,6 @@ int main () {
     /* Look-Up Dictionary */
     map<vector<long double>, char> letterMap;
 
-    // Add elements to the map
     for (int i = 0; i < 52; ++i) {
         vector<long double> key(52, 0.0); 
         key[i] = 1.0; 
@@ -52,7 +51,7 @@ int main () {
     vector<long double> biasesL7;
 
     /* Parse Input Tensor */
-    Parser tensorParser("tensors/01out.txt");               // Use "\\tensors\\01out.txt" for Windows
+    Parser tensorParser("tensors/01out.txt");              
 
     // Parse to Vector and Matrix
     tensorParser.parseToVector(inputVector);
