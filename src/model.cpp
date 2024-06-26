@@ -93,8 +93,8 @@ int Model::forward_pass (double* input) {
 // Frees used memory, namely all neurons' weights and biases
 Model::~Model () {
     for (int i = 0; i < layer_count; i ++) {
-        delete layers [i].weights;
-        delete layers [i].biases;
-        delete layers [i].outputs;
+        delete[] layers [i].weights;
+        delete[] layers [i].biases;
+        delete[] layers [i].outputs;
     }
 }

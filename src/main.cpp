@@ -107,19 +107,37 @@ int main () {
     model.add_layer (40, v2D_to_a (weightsL6), v_to_a (biasesL6));
     model.add_layer (52, v2D_to_a (weightsL7), v_to_a (biasesL7));
     
-    ofstream file ("results.csv");
+    // Dark magic
     string tensors_path = filesystem::current_path ().string () + "/tensors";
+    string path = (*filesystem::directory_iterator (tensors_path)).path ().string ();
+    int digits = path.size () - 8 - tensors_path.size ();
+    int size = 1;
+    for (int i = 0; i < digits; i ++, size *= 10);
+    char* aux = new char [size];
+
+    int cnt = 1;
     for (auto& entry : filesystem::directory_iterator (tensors_path)) {
+        string path = entry.path ().string ();
         vector <long double> input;
-        Parser tensorParser (entry.path ().string ());
+        Parser tensorParser (path);
         tensorParser.parseToVector (input);
         int res = model.forward_pass (v_to_a (input));
+
         char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
-        string substr = entry.path ().string ().substr (tensors_path.size () + 1);
+        string substr = path.substr (tensors_path.size () + 1, digits);
+        aux [stoi (substr)] = letter;
         cout << "For \'" << substr <<  "\' the result is " << letter << endl;
-        file << "File: " << substr << ",  guess=\'" << letter << "\'" << endl;
+        cnt ++;
     }
-    file.close ();
+    cout << aux << endl;
+
+    ofstream fout ("results.csv");
+    fout << "image number,label" << endl;
+    for (int i = 1; i <= cnt; i ++) {
+        fout << i << ',' << aux [i] << endl;
+    }
+    fout.close ();
+    delete[] aux;
 
     return 0;
 }
