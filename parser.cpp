@@ -1,95 +1,100 @@
 /*
  * Functions that parse input array to either Vector or Matrix
  */
+#include "Parser.h"
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <regex>
+Parser::Parser(string fileName) {
+    FILE_NAME = fileName;
+}
 
-using namespace std;
+void Parser::parseToVector(vector<long double> &vector) {
+    ifstream file(FILE_NAME);
 
-class Parser {
-    private:
-        string FILE_NAME;
+    string line;
+    getline(file, line);
 
-        
+    stringstream stream(line);
+    string token;
 
-    public:
-        /*
-         * Constructor
-         */
-        Parser(string fileName) {
-            FILE_NAME = fileName;
-        }
+    // Parse long doubles into vector
+    while (getline(stream, token, ',')) {
+        vector.push_back(stold(token));
+    }
 
-        /*
-         * Function: Parses values from file to a vector
-         */
-        void ParseToVector(long double *vector) {
-            ifstream file(FILE_NAME);
-            
-            string line;
-            getline(file, line); 
+    file.close();
+}
+
+void Parser::parseToMatrix(vector<vector<long double>> &matrix, int dimX, int dimY) {
+    ifstream file(FILE_NAME);
+
+    string line;
+    getline(file, line);
+
+    stringstream stream(line);
+    string token;
+
+    // Initialize matrix with dimensions
+    matrix.resize(dimY, vector<long double>(dimX));
+
+    // Parse long doubles into matrix
+    int count = 0;
+    while (getline(stream, token, ',')) {
+        matrix[count / dimX][count % dimX] = stold(token);
+        count++;
+    }
+
+    file.close();
+}
+
+void Parser::parseWeights(vector<vector<long double>> &weights, int layer, int dimIn, int dimOut) {
+    ifstream file(FILE_NAME);
+
+    string line;
+    while (getline(file, line)) {
+        if (regex_match(line, regex("fc" + to_string(layer) + R"(.*\.weight:$)"))) {
+            // Read in next line
+            getline(file, line);
 
             stringstream stream(line);
             string token;
-            int count {};
 
-            // Parse numbers into array
-            while (getline(stream, token, ',') && count < 255) {
-                vector[count++] = stoi(token);
-            }
-        }
+            // Initialize weights matrix with dimensions
+            weights.resize(dimOut, vector<long double>(dimIn));
 
-        /*
-         * Function: Parses values from file to a matrix
-         */
-        void ParseToMatrix(long double **matrix) {
-            ifstream file(FILE_NAME);
-            
-            string line;
-            getline(file, line); 
-
-            stringstream stream(line);
-            string token;
-            int count {};
-
-            // Parse numbers into array
-            while (getline(stream, token, ',') && count < 255) {
-                matrix[count % 15][count / 15] = stoi(token);
+            // Parse long doubles into matrix
+            int count = 0;
+            while (getline(stream, token, ',')) {
+                weights[count / dimIn][count % dimIn] = stold(token);
                 count++;
             }
         }
+    }
 
-        /*
-         * Function: Parses Weights from a file to a list of matrices
-         */
-        void ParseWeights(long double ***weights, int size) {
-            ifstream file(FILE_NAME);
+    file.close();
+}
 
-            //string line;
-            //while (getline(file, line)) {
-            //    if (regex_match(line, regex(R"(.*weights:$)"))) {
-            //        getline(file,line);
-            //
-            //        stringstream stream(line);
-            //        string token;
-            //        int count {};
-            //
-            //    }
-            //
-            //}
+void Parser::parseBiases(vector<long double> &biases, int layer, int size) {
+    ifstream file(FILE_NAME);
 
+    string line;
+    while (getline(file, line)) {
+        if (regex_match(line, regex("fc" + to_string(layer) + R"(.*\.bias:$)"))) {
+            // Read in next line
+            getline(file, line);
+
+            stringstream stream(line);
+            string token;
+
+            // Initialize biases vector with size
+            biases.resize(size);
+
+            // Parse long doubles into vector
+            int count = 0;
+            while (getline(stream, token, ',')) {
+                biases[count++] = stold(token);
+            }
         }
+    }
 
-        /*
-         * Function: Parses Biases from a file to a list of vectors
-         */
-        void ParseBiases(long double **biases, int size) {
-
-        }
-        
-        
-    
-};
+    file.close();
+}
