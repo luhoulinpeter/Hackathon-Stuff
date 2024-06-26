@@ -19,12 +19,11 @@ int main () {
     /* Look-Up Dictionary */
     map<int, char> letterMap;
 
-    // Add elements to the map
     for (int i = 1; i < 52; ++i) {
         if (i % 2 == 1) {
-            letterMap[i] = 'A' + (i - 1) / 2;  // Uppercase letters for odd indices
+            letterMap[i] = 'A' + (i - 1) / 2;  
         } else {
-            letterMap[i] = 'a' + (i - 2) / 2;  // Lowercase letters for even indices
+            letterMap[i] = 'a' + (i - 2) / 2;  
         }
     }
     
@@ -49,7 +48,7 @@ int main () {
     vector<long double> biasesL7;
 
     /* Parse Input Tensor */
-    Parser tensorParser("tensors/01out.txt");               // Use "\\tensors\\01out.txt" for Windows
+    Parser tensorParser("tensors/01out.txt");           
 
     // Parse to Vector and Matrix
     tensorParser.parseToVector(inputVector);
