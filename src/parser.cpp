@@ -74,11 +74,7 @@ void Parser::parseWeights(vector<vector<long double> > &weights, int layer, int 
     file.close();
 }
 
-<<<<<<< HEAD
 void Parser::parseBiases(vector<long double> &biases, int layer) {
-=======
-void Parser::parseBiases(vector<long double> &biases, int layer, int size) {
->>>>>>> ddb0dbe (Recommit)
     ifstream file(FILE_NAME);
 
     string line;
@@ -90,19 +86,9 @@ void Parser::parseBiases(vector<long double> &biases, int layer, int size) {
             stringstream stream(line);
             string token;
 
-<<<<<<< HEAD
             // Parse long doubles into vector
             while (getline(stream, token, ',')) {
                 biases.push_back(stold(token));
-=======
-            // Initialize biases vector with size
-            biases.resize(size);
-
-            // Parse long doubles into vector
-            int count = 0;
-            while (getline(stream, token, ',')) {
-                biases[count++] = stold(token);
->>>>>>> ddb0dbe (Recommit)
             }
         }
     }
