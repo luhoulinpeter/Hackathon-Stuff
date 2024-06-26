@@ -9,12 +9,28 @@
 
 #include <iostream>
 #include <vector>
+#include <map>
 #include "parser.h"
 #include "model.hpp"
 
 using namespace std;
 
 int main () {
+    /* Look-Up Dictionary */
+    map<vector<long double>, char> letterMap;
+
+    // Add elements to the map
+    for (int i = 0; i < 52; ++i) {
+        vector<long double> key(52, 0.0); 
+        key[i] = 1.0; 
+
+        if (i % 2 == 1) {
+            letterMap[key] = 'A' + (i - 1) / 2;  
+        } else {
+            letterMap[key] = 'a' + (i - 2) / 2;  
+        }
+    }
+    
     /* Create matrices and vectors */
     vector<long double> inputVector;
     vector<vector<long double> > inputMatrix;
