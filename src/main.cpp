@@ -40,7 +40,7 @@ int main () {
     // Look-Up Dictionary
     map<int, char> letterMap;
 
-    for (int i = 1; i < 52; ++i) {
+    for (int i = 0; i < 52; ++i) {
         if (i % 2 == 1) {
             letterMap[i] = 'A' + (i - 1) / 2;  
         } else {
@@ -96,38 +96,6 @@ int main () {
     weightsParser.parseBiases(biasesL6, 6);
     weightsParser.parseBiases(biasesL7, 7);
 
-    // Output parsed data (for testing purposes)
-    if (0) {
-        cout << "Parsed Input Vector:" << endl;         // Working
-        for (auto num : inputVector) {
-            cout << num << " ";
-        }
-        cout << endl;
-    } else if (0) {
-        cout << "Parsed Input Matrix:" << endl;         // Not working yet
-        for (auto& row : inputMatrix) {
-            for (auto& num : row) {
-                cout << num << " ";
-            }
-            cout << endl;
-        }
-    } else if (0) {
-        cout << "Parsed Weights L1:" << endl;           // Not working yet
-        for (auto& row : weightsL1) {
-            for (auto& num : row) {
-                cout << num << " ";
-            }
-            cout << endl;
-        }
-    } else if (0) {
-        cout << "Parsed Biases L1:" << endl;            // Working
-        for (auto& num : biasesL1) {
-            cout << num << " ";
-        }
-        cout << endl;
-    }
-
-    
     // Initialize model
     Model model (7, 225);
     // What a nice temporary solution!
@@ -139,7 +107,9 @@ int main () {
     model.add_layer (40, v2D_to_a (weightsL6), v_to_a (biasesL6));
     model.add_layer (52, v2D_to_a (weightsL7), v_to_a (biasesL7));
     
+    ofstream file("results.csv");
     string tensors_path = filesystem::current_path ().string () + "/tensors";
+    int label = 1;
     for (auto& entry : filesystem::directory_iterator (tensors_path)) {
         cout << entry.path () << endl;
         vector <long double> input;
@@ -147,9 +117,12 @@ int main () {
         tensorParser.parseToVector (input);
         int res = model.forward_pass (v_to_a (input));
         cout << "Result: " << (res % 2 ? char (97 + res / 2) : char (65 + res / 2)) << endl;
+        file << "Label: " << label << ",  guess=\'" << letterMap[model.forward_pass (v_to_a (input))] << "\'"<< endl;
+        label++;
     }
+    file.close();
 
-    //auto v = softmax ({1.3, 5.1, 2.2, 0.7, 1.1}, 5);
+    //auto v = softmax ({1.3, 5.1, 2.2, 0.7, 1.1});
     //for (auto k : v) { cout << k << ' ';} cout << endl;
 
     return 1;
