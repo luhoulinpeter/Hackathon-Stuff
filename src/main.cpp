@@ -11,6 +11,7 @@
 #include <vector>
 #include "parser.h"
 #include "model.hpp"
+#include "activations.h"
 
 using namespace std;
 
