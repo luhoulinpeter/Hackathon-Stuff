@@ -40,7 +40,7 @@ int main () {
     /* Look-Up Dictionary */
     map<int, char> letterMap;
 
-    for (int i = 1; i < 52; ++i) {
+    for (int i = 0; i < 52; ++i) {
         if (i % 2 == 1) {
             letterMap[i] = 'A' + (i - 1) / 2;  
         } else {
@@ -145,7 +145,7 @@ int main () {
         vector <long double> input;
         Parser tensorParser (entry.path ().string ());
         tensorParser.parseToVector (input);
-        cout << "Result: " << model.forward_pass (v_to_a (input)) << endl;
+        cout << "Result: " << letterMap[model.forward_pass (v_to_a (input))] << endl;
     }
 
     return 1;
