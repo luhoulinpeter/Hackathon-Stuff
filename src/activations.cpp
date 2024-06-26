@@ -18,4 +18,6 @@ vector<long double> softmax(vector<long double> input, int length) {
     for (int i=0; i<length; i++) {
         output[i] = input[i] / exp_sum;
     }
+
+    return output;
 }

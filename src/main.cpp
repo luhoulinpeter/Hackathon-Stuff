@@ -9,11 +9,11 @@
 
 #include "reader.h"
 #include "model.h"
+#include "activations.h"
 #include <iostream>
 #include <vector>
 #include <map>
 #include <filesystem>
-#include "activations.h"
 
 using namespace std;
 
