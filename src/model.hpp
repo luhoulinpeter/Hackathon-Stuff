@@ -1,53 +1,100 @@
-#include <list>
-
-using namespace std;
-
 // Neural network model class
 class Model {
 private:
-    // Size of input array
-    int input_size;
 
     // Layer structure
     struct Layer {
-        int neurons_count, prev_layer_count;
+        int neuron_count, prev_layer_count;
         double* weights;
         double* biases;
+        double* outputs;
+
+        // Process current layer in forward propagation
+        // Takes input to it and a flag whether it's the last layer in a model
+        void process (double* input, bool is_output) {
+            //layer.outputs =  <all the math stuff>
+            // TODO
+
+            // Activate outputs
+            if (is_output) {
+                // relu activation
+            }
+            else {
+                for (int i = 0; i < neuron_count; i ++) {
+                    if (outputs [i] < 0) {
+                        outputs [i] = 0;
+                    }
+                }
+            }
+        }
     };
 
-    // Model's layers
-    list <Layer> layers;
+    // Model's layers and their count
+    int layer_count, current_layer_count;
+    Layer* layers;
+
+    // Size of an input array
+    int input_size;
+
 
 public:
+
     // The constuctor
     // Takes an input size as a parameter
-    Model (int input_size) {
+    Model (int layers_count, int input_size) {
+        this -> layer_count = layers_count;
+        this -> current_layer_count = 0;
+        this -> layers = new Layer [layers_count];
         this -> input_size = input_size;
     }
 
     // Add a new layer to the model
     // Takes number of neurons in this layers along with their weights and biases
     void add_layer (int neurons_count, double* weights, double* biases) {
-        layers.push_back ({
-            .neurons_count = neurons_count,
-            .prev_layer_count = layers.empty () ? input_size : layers.back ().neurons_count,
+        layers [current_layer_count] = {
+            .neuron_count = neurons_count,
+            .prev_layer_count = current_layer_count > 0 ?
+                layers [current_layer_count - 1].neuron_count : input_size,
             .weights = weights,
-            .biases = biases
-        });
+            .biases = biases,
+            .outputs = new double [neurons_count]
+        };
+        current_layer_count ++;
     }
 
     // Forward pass
     // Takes input array as a parameter and returns an index of a most similar letter
     int forward_pass (double* input) {
-        //TODO
+        // Process input -> first layer
+        layers [0].process (input, false);
+
+        // Process layer K -> layer K + 1
+        for (int i = 1; i < layer_count - 1; i ++) {
+            layers [i].process (layers [i - 1].outputs, false);
+        }
+
+        // Process pre-last layer -> last layer
+        Layer& last_layer = layers [layer_count - 1];
+        last_layer.process (layers [layer_count - 2].outputs, true);
+
+        // Find maximum output and its position
+        int pos = 0, max = 0;
+        for (int i = 0; i < last_layer.neuron_count; i ++) {
+            if (last_layer.outputs [i] > max) {
+                max = last_layer.outputs [i];
+                pos = i;
+            }
+        }
+        return pos;
     }
 
     // The destructor
     // Frees used memory, namely all neurons' weights and biases
     ~Model () {
-        for (Layer& layer : layers) {
-            delete layer.weights;
-            delete layer.biases;
+        for (int i = 0; i < layer_count; i ++) {
+            delete layers [i].weights;
+            delete layers [i].biases;
+            delete layers [i].outputs;
         }
     }
 };

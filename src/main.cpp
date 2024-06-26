@@ -7,29 +7,14 @@
  *                                                                               *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/*
- * Libraries
- */
-
 #include <iostream>
 #include <vector>
-#include "input.h"
 #include "parser.h"
+#include "model.hpp"
+
+using namespace std;
 
 int main () {
-    // setup configs and constants such as:
-    //   model parameters, number of images in folder, etc
-    const int NUM_IMAGES = 5;
-
-    // init model
-    read_weights ("weights_and_biases.txt");
-
-    // process each image
-    
-    for (int i = 0; i < NUM_IMAGES; i ++) {
-        read_bitmap ("img" + std::to_string (i) + ".bmp");
-    }
-
     /* Create matrices and vectors */
     vector<long double> inputVector;
     vector<vector<long double> > inputMatrix;
@@ -61,7 +46,7 @@ int main () {
     Parser weightsParser("weights_and_biases.txt");
 
     // Parse Weights
-    weightsParser.parseWeights(weightsL1, 1, 255, 98);
+    weightsParser.parseWeights(weightsL1, 1, 225, 98);
     weightsParser.parseWeights(weightsL2, 2, 98, 65);
     weightsParser.parseWeights(weightsL3, 3, 65, 50);
     weightsParser.parseWeights(weightsL4, 4, 50, 30);
@@ -108,6 +93,17 @@ int main () {
         }
         cout << endl;
     }
+
+    
+    // Initialize model
+    Model model (7, 225);
+    model.add_layer (98, nullptr, nullptr);
+    model.add_layer (65, nullptr, nullptr);
+    model.add_layer (50, nullptr, nullptr);
+    model.add_layer (30, nullptr, nullptr);
+    model.add_layer (25, nullptr, nullptr);
+    model.add_layer (40, nullptr, nullptr);
+    model.add_layer (52, nullptr, nullptr);
 
     return 1;
 }
