@@ -7,16 +7,47 @@
  *                                                                               *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "reader.h"
+#include "model.h"
 #include <iostream>
 #include <vector>
-#include "parser.h"
-#include "model.hpp"
+#include <map>
 #include "activations.h"
 
 using namespace std;
 
+double* v_to_a (const vector <long double>& vec) {
+    double* arr = new double [vec.size ()];
+    for (size_t i = 0; i < vec.size (); i ++) {
+        arr [i] = vec [i];
+    }
+    return arr;
+}
+
+double* v2D_to_a (const vector <vector <long double> >& weights) {
+    int lsize = weights [0].size ();
+    double* arr = new double [weights.size () * lsize];
+    for (size_t i = 0; i < weights.size (); i ++) {
+        for (int j = 0; j < lsize; j ++) {
+            arr [i*lsize + j] = weights [i] [j];
+        }
+    }
+    return arr;
+}
+
 int main () {
-    /* Create matrices and vectors */
+    /* Look-Up Dictionary */
+    map<int, char> letterMap;
+
+    for (int i = 1; i < 52; ++i) {
+        if (i % 2 == 1) {
+            letterMap[i] = 'A' + (i - 1) / 2;  
+        } else {
+            letterMap[i] = 'a' + (i - 2) / 2;  
+        }
+    }
+
+    // Create matrices and vectors
     vector<long double> inputVector;
     vector<vector<long double> > inputMatrix;
 
@@ -36,14 +67,14 @@ int main () {
     vector<long double> biasesL6;
     vector<long double> biasesL7;
 
-    /* Parse Input Tensor */
-    Parser tensorParser("tensors/01out.txt");               // Use "\\tensors\\01out.txt" for Windows
+    // Parse Input Tensor
+    Parser tensorParser("tensors/01out.txt");
 
     // Parse to Vector and Matrix
     tensorParser.parseToVector(inputVector);
     tensorParser.parseToMatrix(inputMatrix, 15, 15);
 
-    /* Parse Weights and Biases */
+    // Parse Weights and Biases
     Parser weightsParser("weights_and_biases.txt");
 
     // Parse Weights
@@ -98,13 +129,14 @@ int main () {
     
     // Initialize model
     Model model (7, 225);
-    model.add_layer (98, nullptr, nullptr);
-    model.add_layer (65, nullptr, nullptr);
-    model.add_layer (50, nullptr, nullptr);
-    model.add_layer (30, nullptr, nullptr);
-    model.add_layer (25, nullptr, nullptr);
-    model.add_layer (40, nullptr, nullptr);
-    model.add_layer (52, nullptr, nullptr);
+    // What a nice temporary solution!
+    model.add_layer (98, v2D_to_a (weightsL1), v_to_a (biasesL1));
+    model.add_layer (65, v2D_to_a (weightsL2), v_to_a (biasesL2));
+    model.add_layer (50, v2D_to_a (weightsL3), v_to_a (biasesL3));
+    model.add_layer (30, v2D_to_a (weightsL4), v_to_a (biasesL4));
+    model.add_layer (25, v2D_to_a (weightsL5), v_to_a (biasesL5));
+    model.add_layer (40, v2D_to_a (weightsL6), v_to_a (biasesL6));
+    model.add_layer (52, v2D_to_a (weightsL7), v_to_a (biasesL7));
 
     return 1;
 }
