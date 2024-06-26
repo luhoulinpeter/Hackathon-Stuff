@@ -31,31 +31,31 @@ int main () {
     }
 
     /* Create matrices and vectors */
-    vector<long double> inputVector {};
-    vector<vector<long double> > inputMatrix {};
+    vector<long double> inputVector;
+    vector<vector<long double> > inputMatrix;
 
-    vector<vector<long double> > weightsL1 {};
-    vector<vector<long double> > weightsL2 {};
-    vector<vector<long double> > weightsL3 {};
-    vector<vector<long double> > weightsL4 {};
-    vector<vector<long double> > weightsL5 {};
-    vector<vector<long double> > weightsL6 {};
-    vector<vector<long double> > weightsL7 {};
+    vector<vector<long double> > weightsL1;
+    vector<vector<long double> > weightsL2;
+    vector<vector<long double> > weightsL3;
+    vector<vector<long double> > weightsL4;
+    vector<vector<long double> > weightsL5;
+    vector<vector<long double> > weightsL6;
+    vector<vector<long double> > weightsL7;
 
-    vector<long double> biasesL1 {};
-    vector<long double> biasesL2 {};
-    vector<long double> biasesL3 {};
-    vector<long double> biasesL4 {};
-    vector<long double> biasesL5 {};
-    vector<long double> biasesL6 {};
-    vector<long double> biasesL7 {};
+    vector<long double> biasesL1;
+    vector<long double> biasesL2;
+    vector<long double> biasesL3;
+    vector<long double> biasesL4;
+    vector<long double> biasesL5;
+    vector<long double> biasesL6;
+    vector<long double> biasesL7;
 
     /* Parse Input Tensor */
-    Parser inputParser("/tensors/01out.txt"); // Use "\\tensors\\01out.txt" for Windows
+    Parser tensorParser("tensors/01out.txt");               // Use "\\tensors\\01out.txt" for Windows
 
-    // Parse Inputs
-    inputParser.parseToVector(inputVector);
-    inputParser.parseToMatrix(inputMatrix, 15, 15);
+    // Parse to Vector and Matrix
+    tensorParser.parseToVector(inputVector);
+    tensorParser.parseToMatrix(inputMatrix, 15, 15);
 
     /* Parse Weights and Biases */
     Parser weightsParser("weights_and_biases.txt");
@@ -70,17 +70,17 @@ int main () {
     weightsParser.parseWeights(weightsL7, 7, 40, 52);
 
     // Parse Biases
-    weightsParser.parseBiases(biasesL1, 1, 98);
-    weightsParser.parseBiases(biasesL2, 2, 65);
-    weightsParser.parseBiases(biasesL3, 3, 50);
-    weightsParser.parseBiases(biasesL4, 4, 30);
-    weightsParser.parseBiases(biasesL5, 5, 25);
-    weightsParser.parseBiases(biasesL6, 6, 40);
-    weightsParser.parseBiases(biasesL7, 7, 52);
+    weightsParser.parseBiases(biasesL1, 1);
+    weightsParser.parseBiases(biasesL2, 2);
+    weightsParser.parseBiases(biasesL3, 3);
+    weightsParser.parseBiases(biasesL4, 4);
+    weightsParser.parseBiases(biasesL5, 5);
+    weightsParser.parseBiases(biasesL6, 6);
+    weightsParser.parseBiases(biasesL7, 7);
 
     // Output parsed data (for testing purposes)
     if (0) {
-        cout << "Parsed Input Vector:" << endl;         // Not working yet
+        cout << "Parsed Input Vector:" << endl;         // Working
         for (auto num : inputVector) {
             cout << num << " ";
         }

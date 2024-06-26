@@ -1,7 +1,7 @@
 /*
  * Functions that parse input array to either Vector or Matrix
  */
-#include "Parser.h"
+#include "parser.h"
 
 Parser::Parser(string fileName) {
     FILE_NAME = fileName;
@@ -73,7 +73,7 @@ void Parser::parseWeights(vector<vector<long double>> &weights, int layer, int d
     file.close();
 }
 
-void Parser::parseBiases(vector<long double> &biases, int layer, int size) {
+void Parser::parseBiases(vector<long double> &biases, int layer) {
     ifstream file(FILE_NAME);
 
     string line;
@@ -85,13 +85,9 @@ void Parser::parseBiases(vector<long double> &biases, int layer, int size) {
             stringstream stream(line);
             string token;
 
-            // Initialize biases vector with size
-            biases.resize(size);
-
             // Parse long doubles into vector
-            int count = 0;
             while (getline(stream, token, ',')) {
-                biases[count++] = stold(token);
+                biases.push_back(stold(token));
             }
         }
     }

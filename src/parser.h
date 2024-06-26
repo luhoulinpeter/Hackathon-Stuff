@@ -28,7 +28,7 @@ public:
     void parseWeights(vector<vector<long double>> &weights, int layer, int dimIn, int dimOut);
 
     // Function: Parses Biases from a file to a vector
-    void parseBiases(vector<long double> &biases, int layer, int size);
+    void parseBiases(vector<long double> &biases, int layer);
 };
 
 #endif // PARSER_H
