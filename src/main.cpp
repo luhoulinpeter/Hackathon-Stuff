@@ -9,7 +9,6 @@
 
 #include "reader.h"
 #include "model.h"
-#include "activations.h"
 #include <iostream>
 #include <vector>
 #include <map>
@@ -17,6 +16,7 @@
 
 using namespace std;
 
+// Temporary function to convert vector <long double> to double*
 double* v_to_a (const vector <long double>& vec) {
     double* arr = new double [vec.size ()];
     for (size_t i = 0; i < vec.size (); i ++) {
@@ -25,6 +25,7 @@ double* v_to_a (const vector <long double>& vec) {
     return arr;
 }
 
+// Temporary function to convert vector < vector <long double> > to double*
 double* v2D_to_a (const vector <vector <long double> >& weights) {
     int lsize = weights [0].size ();
     double* arr = new double [weights.size () * lsize];
@@ -39,7 +40,6 @@ double* v2D_to_a (const vector <vector <long double> >& weights) {
 int main () {
     // Look-Up Dictionary
     map<int, char> letterMap;
-
     for (int i = 0; i < 52; ++i) {
         if (i % 2 == 1) {
             letterMap[i] = 'A' + (i) / 2;  
@@ -107,23 +107,19 @@ int main () {
     model.add_layer (40, v2D_to_a (weightsL6), v_to_a (biasesL6));
     model.add_layer (52, v2D_to_a (weightsL7), v_to_a (biasesL7));
     
-    ofstream file("results.csv");
+    ofstream file ("results.csv");
     string tensors_path = filesystem::current_path ().string () + "/tensors";
-    int label = 1;
     for (auto& entry : filesystem::directory_iterator (tensors_path)) {
-        cout << entry.path () << endl;
         vector <long double> input;
         Parser tensorParser (entry.path ().string ());
         tensorParser.parseToVector (input);
         int res = model.forward_pass (v_to_a (input));
-        cout << "Result: " << (res % 2 ? char (97 + res / 2) : char (65 + res / 2)) << endl;
-        file << "Label: " << label << ",  guess=\'" << letterMap[model.forward_pass (v_to_a (input))] << "\'"<< endl;
-        label++;
+        char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
+        string substr = entry.path ().string ().substr (tensors_path.size () + 1);
+        cout << "For \'" << substr <<  "\' the result is " << letter << endl;
+        file << "File: " << substr << ",  guess=\'" << letter << "\'" << endl;
     }
-    file.close();
+    file.close ();
 
-    //auto v = softmax ({1.3, 5.1, 2.2, 0.7, 1.1});
-    //for (auto k : v) { cout << k << ' ';} cout << endl;
-
-    return 1;
+    return 0;
 }
