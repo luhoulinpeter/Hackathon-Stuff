@@ -3,7 +3,7 @@ CXX = g++
 # Compiler flags
 CXXFLAGS = -std=c++17 -Wall -Wextra
 # Executable name
-TARGET = program
+TARGET = speed_cpu
 # Directories
 SRC_DIR = src
 BUILD_DIR = build
