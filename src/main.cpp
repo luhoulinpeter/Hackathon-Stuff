@@ -107,14 +107,18 @@ int main () {
     model.add_layer (40, v2D_to_a (weightsL6), v_to_a (biasesL6));
     model.add_layer (52, v2D_to_a (weightsL7), v_to_a (biasesL7));
     
+    ofstream file("results.csv");
     string tensors_path = filesystem::current_path ().string () + "/tensors";
+    int label = 1;
     for (auto& entry : filesystem::directory_iterator (tensors_path)) {
         cout << entry.path () << endl;
         vector <long double> input;
         Parser tensorParser (entry.path ().string ());
         tensorParser.parseToVector (input);
-        cout << "Result: " << letterMap[model.forward_pass (v_to_a (input))] << endl;
+        file << "Label: " << label << ",  guess=\'" << letterMap[model.forward_pass (v_to_a (input))] << "\'"<< endl;
+        label++;
     }
+    file.close();
 
     return 1;
 }
