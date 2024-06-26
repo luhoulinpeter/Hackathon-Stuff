@@ -42,9 +42,9 @@ int main () {
 
     for (int i = 0; i < 52; ++i) {
         if (i % 2 == 1) {
-            letterMap[i] = 'A' + (i - 1) / 2;  
+            letterMap[i] = 'A' + (i) / 2;  
         } else {
-            letterMap[i] = 'a' + (i - 2) / 2;  
+            letterMap[i] = 'a' + (i - 1) / 2;  
         }
     }
 
