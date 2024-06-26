@@ -1,11 +1,11 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * StartHack Hackathon HPC Neural Network on Digit Recognition Sponsered by QDX  *
- *                                   Authors                                     *
- *                      Carlvince, Lucas, Peter, Volodmyr                        *
- *                                                                               *
- *                    (SHORT DESCRIPTION OF NEURAL NETWORK)                      *
- *                                                                               *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *        StartHack Hackathon HPC Neural Network on Digit Recognition Sponsered by QDX       *
+ *                                          Authors                                          *
+ *                   Carlvince Tan, Lucas Yu, Peter Lu, Volodymyr Kazmirchuk                 *
+ *                                                                                           *
+ *                          (SHORT DESCRIPTION OF NEURAL NETWORK)                            *
+ *                                                                                           *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "reader.h"
 #include "model.h"
@@ -115,14 +115,17 @@ int main () {
     for (int i = 0; i < digits; i ++, size *= 10);
     char* aux = new char [size];
 
+    // Processing every file
     int cnt = 1;
     for (auto& entry : filesystem::directory_iterator (tensors_path)) {
+        // Reading data and processing
         string path = entry.path ().string ();
         vector <long double> input;
         Parser tensorParser (path);
         tensorParser.parseToVector (input);
         int res = model.forward_pass (v_to_a (input));
 
+        // Converting and saving the result
         char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
         string substr = path.substr (tensors_path.size () + 1, digits);
         aux [stoi (substr)] = letter;
@@ -131,6 +134,7 @@ int main () {
     }
     cout << aux << endl;
 
+    // Writing results to csv
     ofstream fout ("results.csv");
     fout << "image number,label" << endl;
     for (int i = 1; i <= cnt; i ++) {
