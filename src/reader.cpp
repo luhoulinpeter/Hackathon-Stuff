@@ -1,7 +1,7 @@
 /*
  * Functions that parse input array to either Vector or Matrix
  */
-#include "parser.h"
+#include "reader.h"
 
 // Constructor definition
 Parser::Parser(string fileName) {

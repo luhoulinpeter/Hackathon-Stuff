@@ -1,5 +1,5 @@
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef READER_H
+#define READER_H
 
 #include <iostream>
 #include <fstream>
@@ -31,4 +31,4 @@ public:
     void parseBiases(vector<long double> &biases, int layer);
 };
 
-#endif // PARSER_H
+#endif // READER_H
