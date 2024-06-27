@@ -9,8 +9,9 @@
 
 #include "reader.h"
 #include "model.h"
-#include "main.h"
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <filesystem>
 #include <chrono>
 
@@ -45,7 +46,7 @@ double* bonk (string filename) {
 
 
 // Initializes model
-void init_model (Model& model) {
+void init_model_vova (Model& model) {
     ifstream fmodel ("weights_and_biases.txt");
     string weights, biases;
     getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
@@ -66,8 +67,46 @@ void init_model (Model& model) {
 }
 
 
+// Initializes model
+void init_model_carlvince (Model& model) {
+    Parameters *parameters = (Parameters *)malloc(sizeof(Parameters));
+
+    // Allocate memory
+    parameters->weightsL1 = new double[22050];
+    parameters->weightsL2 = new double[6370];
+    parameters->weightsL3 = new double[3250];
+    parameters->weightsL4 = new double[1500];
+    parameters->weightsL5 = new double[750];
+    parameters->weightsL6 = new double[1000];
+    parameters->weightsL7 = new double[2080];
+
+    parameters->biasesL1 = new double[98];
+    parameters->biasesL2 = new double[65];
+    parameters->biasesL3 = new double[50];
+    parameters->biasesL4 = new double[30];
+    parameters->biasesL5 = new double[25];
+    parameters->biasesL6 = new double[40];
+    parameters->biasesL7 = new double[52];
+
+    // read Weights and Biases
+    Reader weightsReader("weights_and_biases.txt");
+    weightsReader.readParameters(parameters);
+
+    // Initialize model
+    model.add_layer(98, parameters->weightsL1, parameters->biasesL1);
+    model.add_layer(65, parameters->weightsL2, parameters->biasesL2);
+    model.add_layer(50, parameters->weightsL3, parameters->biasesL3);
+    model.add_layer(30, parameters->weightsL4, parameters->biasesL4);
+    model.add_layer(25, parameters->weightsL5, parameters->biasesL5);
+    model.add_layer(40, parameters->weightsL6, parameters->biasesL6);
+    model.add_layer(52, parameters->weightsL7, parameters->biasesL7);
+
+    free(parameters);
+}
+
+
 // Processes all tensors in a directory
-void process_directory (Model& model) {
+void process_directory (Model& model, bool v) {
     // Dark magic
     string tensors_path = filesystem::current_path ().string () + "/tensors";
     string path = (*filesystem::directory_iterator (tensors_path)).path ().string ();
@@ -81,7 +120,16 @@ void process_directory (Model& model) {
     for (auto& entry : filesystem::directory_iterator (tensors_path)) {
         // Reading data and processing
         string path = entry.path ().string ();
-        int res = model.forward_pass (bonk (path));
+        int res;
+        if (v) {
+            res = model.forward_pass (bonk (path));
+        }
+        else {
+            double* input = new double [225];
+            Reader tensorReader (path);
+            tensorReader.readInput (input);
+            res = model.forward_pass (input);
+        }
 
         // Converting and saving the result
         char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
@@ -109,7 +157,7 @@ int main () {
     // Initialize model
     auto start = chrono::system_clock::now ();
     Model model (7, 225);
-    init_model (model);
+    init_model_vova (model);
     cout << "Model initialized in " << elapsed << " milliseconds" << endl;
 
     // Process directory (once)
@@ -122,130 +170,11 @@ int main () {
     long double avg = 0;
     for (int i = 0; i < repeats; i ++) {
         start = chrono::system_clock::now ();
-        process_directory (model);
+        process_directory (model, true);
         avg += elapsed;
         if (i % 100 == 0) { cout << "Completed " << i << " repeats" << endl; }
     }
     cout << "Average directory processing time: " << avg / repeats << " milliseconds" << endl;
     
-    /*-----------------------------------------------------------------------------------------------*/
-    /*                                     MY PART                                                   */
-    /*-----------------------------------------------------------------------------------------------*/
-    Parameters *parameters = (Parameters *)malloc(sizeof(Parameters));
-
-    // Allocate memory
-    parameters->weightsL1 = (double *)malloc(22050 * sizeof(double));
-    parameters->weightsL2 = (double *)malloc(6370 * sizeof(double));
-    parameters->weightsL3 = (double *)malloc(3250 * sizeof(double));
-    parameters->weightsL4 = (double *)malloc(1500 * sizeof(double));
-    parameters->weightsL5 = (double *)malloc(750 * sizeof(double));
-    parameters->weightsL6 = (double *)malloc(1000 * sizeof(double));
-    parameters->weightsL7 = (double *)malloc(2080 * sizeof(double));
-
-    parameters->biasesL1 = (double *)malloc(98 * sizeof(double));
-    parameters->biasesL2 = (double *)malloc(65 * sizeof(double));
-    parameters->biasesL3 = (double *)malloc(50 * sizeof(double));
-    parameters->biasesL4 = (double *)malloc(30 * sizeof(double));
-    parameters->biasesL5 = (double *)malloc(25 * sizeof(double));
-    parameters->biasesL6 = (double *)malloc(40 * sizeof(double));
-    parameters->biasesL7 = (double *)malloc(52 * sizeof(double));
-
-    // read Weights and Biases
-    Reader weightsReader("weights_and_biases.txt");
-    weightsReader.readParameters(parameters);
-
-    // Initialize model
-    Model model (7, 225);
-    // What a nice temporary solution!
-    model.add_layer (98, parameters->weightsL1, parameters->biasesL1);
-    model.add_layer (65, parameters->weightsL2, parameters->biasesL2);
-    model.add_layer (50, parameters->weightsL3, parameters->biasesL3);
-    model.add_layer (30, parameters->weightsL4, parameters->biasesL4);
-    model.add_layer (25, parameters->weightsL5, parameters->biasesL5);
-    model.add_layer (40, parameters->weightsL6, parameters->biasesL6);
-    model.add_layer (52, parameters->weightsL7, parameters->biasesL7);
-    
-    // Dark magic
-    string tensors_path = filesystem::current_path ().string () + "/tensors";
-    string path = (*filesystem::directory_iterator (tensors_path)).path ().string ();
-    int digits = path.size () - 8 - tensors_path.size ();
-    int size = 1;
-    for (int i = 0; i < digits; i ++, size *= 10);
-    char* aux = new char [size];
-
-    // Processing every file
-    int cnt = 1;
-    for (auto& entry : filesystem::directory_iterator (tensors_path)) {
-        // Reading data and processing
-        string path = entry.path ().string ();
-        double *input = (double *)malloc(225 * sizeof(double));
-        Reader tensorReader (path);
-        tensorReader.readInput (input);
-        int res = model.forward_pass (input);
-
-        // Converting and saving the result
-        char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
-        string substr = path.substr (tensors_path.size () + 1, digits);
-        aux [stoi (substr)] = letter;
-        cout << "For \'" << substr <<  "\' the result is " << letter << '\n';
-        cnt ++;
-    }
-    cout << aux << '\n';
-
-    // Writing results to csv
-    ofstream fout ("results.csv");
-    fout << "image number,label" << '\n';
-    for (int i = 1; i <= cnt; i ++) {
-        fout << i << ',' << aux [i] << '\n';
-    }
-    fout.close ();
-    delete[] aux;
-
-    // Clear Memory
-
-    /*-----------------------------------------------------------------------------------------------*/
-    /*-----------------------------------------------------------------------------------------------*/
-    /*-----------------------------------------------------------------------------------------------*/
-
-    //exmple of using new to declare dynamic arrs
-    // double* var = new double [88];
-    // delete[] var;
-
-    // vector<long double> biasesL1;
-    // vector<long double> biasesL2;
-    // vector<long double> biasesL3;
-    // vector<long double> biasesL4;
-    // vector<long double> biasesL5;
-    // vector<long double> biasesL6;
-    // vector<long double> biasesL7;
-
-    // // Parse Input Tensor
-    // Parser tensorParser("tensors/01out.txt");
-
-    // // Parse to Vector and Matrix
-    // tensorParser.parseToVector(inputVector);
-    // tensorParser.parseToMatrix(inputMatrix, 15, 15);
-
-    // // Parse Weights and Biases
-    // Parser weightsParser("weights_and_biases.txt");
-
-    // // Parse Weights
-    // weightsParser.parseWeights(weightsL1, 1, 225, 98);
-    // weightsParser.parseWeights(weightsL2, 2, 98, 65);
-    // weightsParser.parseWeights(weightsL3, 3, 65, 50);
-    // weightsParser.parseWeights(weightsL4, 4, 50, 30);
-    // weightsParser.parseWeights(weightsL5, 5, 30, 25);
-    // weightsParser.parseWeights(weightsL6, 6, 25, 40);
-    // weightsParser.parseWeights(weightsL7, 7, 40, 52);
-
-    // // Parse Biases
-    // weightsParser.parseBiases(biasesL1, 1);
-    // weightsParser.parseBiases(biasesL2, 2);
-    // weightsParser.parseBiases(biasesL3, 3);
-    // weightsParser.parseBiases(biasesL4, 4);
-    // weightsParser.parseBiases(biasesL5, 5);
-    // weightsParser.parseBiases(biasesL6, 6);
-    // weightsParser.parseBiases(biasesL7, 7);
-
     return 0;
 }

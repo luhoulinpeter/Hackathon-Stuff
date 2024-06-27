@@ -63,6 +63,7 @@ void Model::add_layer (int neuron_count, double* weights, double* biases) {
 int Model::forward_pass (double* input) {
     // Process input -> first layer
     layers [0].process (input, false);
+    delete[] input;
 
     // Process layer K -> layer K + 1
     for (int i = 1; i < layer_count - 1; i ++) {
