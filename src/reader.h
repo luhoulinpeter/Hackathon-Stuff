@@ -1,14 +1,7 @@
 #ifndef READER_H
 #define READER_H
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <regex>
 #include <string>
-#include <vector>
-
-using namespace std;
 
 // Define the Parameters struct
 struct Parameters {
@@ -27,21 +20,14 @@ struct Parameters {
     double *biasesL5;
     double *biasesL6;
     double *biasesL7;
+
+    Parameters ();
 };
 
-class Reader {
-private:
-    string FILE_NAME;
+// Read values from file to an array
+double* read_input (const std::string& filename);
 
-public:
-    // Constructor
-    Reader(string fileName);
-
-    // Function: reads values from file to a vector
-    void readInput(double* vector);
-
-    // Function: reads Weights from a file to a matrix
-    void readParameters(Parameters *parameters);
-};
+// Reads weights from file to parameters
+void read_parameters (const std::string& filename, Parameters* parameters);
 
 #endif 

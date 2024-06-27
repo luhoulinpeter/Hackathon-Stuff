@@ -1,7 +1,6 @@
 #include "model.h"
 #include <cmath>
 
-using namespace std;
 
 // Process current layer in forward propagation
 // Takes input to it and a flag whether it's the last layer in a model
@@ -19,7 +18,7 @@ void Model::Layer::process (double* input, bool is_output) {
         // Softmax
         double exp_sum = 0;
         for (int i = 0; i < neuron_count; i ++) {
-            exp_sum += exp (outputs [i]);  // Possible optimisation: use simpler exp
+            exp_sum += exp (outputs [i]);
         }
         for (int i = 0; i < neuron_count; i ++) {
             outputs [i] = exp (outputs [i]) / exp_sum;
