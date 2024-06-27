@@ -36,6 +36,23 @@ void parseLine (const string& line, double* values) {
     }
 }
 
+// void parseLine(string line, double *values) {
+//     int count = 0;
+//     string token = "";
+//     for (char c : line) {
+//         if (c == ',') {
+//             values[count++] = stod(token);
+//             token.clear(); 
+//         } else {
+//             token.push_back(c);
+//         }
+//     }
+
+//     if (!token.empty()) {
+//         values[count++] = stod(token);
+//     }
+// }
+
 
 // Read values from file to an array
 double* read_input (const string& filename) {
