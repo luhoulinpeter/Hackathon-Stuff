@@ -10,35 +10,40 @@
 #include "reader.h"
 #include "model.h"
 #include <iostream>
-#include <vector>
-#include <map>
+#include <fstream>
 #include <filesystem>
 
 using namespace std;
 
-// Temporary function to convert vector <long double> to double*
-double* v_to_a (const vector <long double>& vec) {
-    double* arr = new double [vec.size ()];
-    for (size_t i = 0; i < vec.size (); i ++) {
-        arr [i] = vec [i];
+// Converts a string to double*
+double* str_to_a (const string& s, int expected) {
+    double* arr = new double [expected];
+    int pos = 0, begin = 0;
+    for (int i = 0; i < int (s.size ()); i ++) {
+        if (s [i] == ',') {
+            arr [pos] = stod (s.substr (begin, i - begin));
+            begin = i + 1;
+            pos ++;
+        }
     }
+    arr [pos] = stod (s.substr (begin));
     return arr;
 }
 
-// Temporary function to convert vector < vector <long double> > to double*
-double* v2D_to_a (const vector <vector <long double> >& weights) {
-    int lsize = weights [0].size ();
-    double* arr = new double [weights.size () * lsize];
-    for (size_t i = 0; i < weights.size (); i ++) {
-        for (int j = 0; j < lsize; j ++) {
-            arr [i*lsize + j] = weights [i] [j];
-        }
-    }
-    return arr;
+// Reads an input tensor to double*
+double* bonk (string filename) {
+    ifstream fin (filename);
+    string s;
+    getline (fin, s);
+    fin.close ();
+    return str_to_a (s, 225);
 }
 
 int main () {
-    // Create matrices and vectors
+    // Optimisations to try:
+    // .tie, ios_base::sync_with_stdio, .flush
+
+    /*// Create matrices and vectors
     vector<long double> inputVector;
     vector<vector<long double> > inputMatrix;
 
@@ -88,18 +93,26 @@ int main () {
     weightsParser.parseBiases(biasesL4, 4);
     weightsParser.parseBiases(biasesL5, 5);
     weightsParser.parseBiases(biasesL6, 6);
-    weightsParser.parseBiases(biasesL7, 7);
+    weightsParser.parseBiases(biasesL7, 7);*/
 
     // Initialize model
     Model model (7, 225);
-    // What a nice temporary solution!
-    model.add_layer (98, v2D_to_a (weightsL1), v_to_a (biasesL1));
-    model.add_layer (65, v2D_to_a (weightsL2), v_to_a (biasesL2));
-    model.add_layer (50, v2D_to_a (weightsL3), v_to_a (biasesL3));
-    model.add_layer (30, v2D_to_a (weightsL4), v_to_a (biasesL4));
-    model.add_layer (25, v2D_to_a (weightsL5), v_to_a (biasesL5));
-    model.add_layer (40, v2D_to_a (weightsL6), v_to_a (biasesL6));
-    model.add_layer (52, v2D_to_a (weightsL7), v_to_a (biasesL7));
+    ifstream fmodel ("weights_and_biases.txt");
+    string weights, biases;
+    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
+    model.add_layer (98, str_to_a (weights, 225 * 98), str_to_a (biases, 98));
+    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
+    model.add_layer (65, str_to_a (weights, 98 * 65), str_to_a (biases, 65));
+    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
+    model.add_layer (50, str_to_a (weights, 65 * 50), str_to_a (biases, 50));
+    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
+    model.add_layer (30, str_to_a (weights, 50 * 30), str_to_a (biases, 30));
+    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
+    model.add_layer (25, str_to_a (weights, 25 * 30), str_to_a (biases, 25));
+    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
+    model.add_layer (40, str_to_a (weights, 40 * 30), str_to_a (biases, 40));
+    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
+    model.add_layer (52, str_to_a (weights, 52 * 40), str_to_a (biases, 52));
     
     // Dark magic
     string tensors_path = filesystem::current_path ().string () + "/tensors";
@@ -109,31 +122,26 @@ int main () {
     for (int i = 0; i < digits; i ++, size *= 10);
     char* aux = new char [size];
 
-    // Processing every file
+    // Processing every file in directory
     int cnt = 1;
     for (auto& entry : filesystem::directory_iterator (tensors_path)) {
         // Reading data and processing
         string path = entry.path ().string ();
-        vector <long double> input;
-        Parser tensorParser (path);
-        tensorParser.parseToVector (input);
-        int res = model.forward_pass (v_to_a (input));
+        int res = model.forward_pass (bonk (path));
 
         // Converting and saving the result
         char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
-        string substr = path.substr (tensors_path.size () + 1, digits);
-        aux [stoi (substr)] = letter;
-        cout << "For \'" << substr <<  "\' the result is " << letter << '\n';
+        aux [stoi (path.substr (tensors_path.size () + 1, digits))] = letter;
         cnt ++;
     }
-    cout << aux << '\n';
 
     // Writing results to csv
     ofstream fout ("results.csv");
     fout << "image number,label" << '\n';
-    for (int i = 1; i <= cnt; i ++) {
+    for (int i = 1; i < cnt; i ++) {
         fout << i << ',' << aux [i] << '\n';
-    }
+        cout << aux [i] << ' ';
+    } cout << endl;
     fout.close ();
     delete[] aux;
 

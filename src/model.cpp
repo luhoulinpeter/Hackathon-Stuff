@@ -48,12 +48,11 @@ Model::Model (int layers_count, int input_size) {
 // Takes number of neurons in this layers along with their weights and biases
 void Model::add_layer (int neuron_count, double* weights, double* biases) {
     layers [current_layer_count] = {
-        .neuron_count = neuron_count,
-        .input_count = current_layer_count > 0 ?
-            layers [current_layer_count - 1].neuron_count : input_size,
-        .weights = weights,
-        .biases = biases,
-        .outputs = new double [neuron_count]
+        neuron_count,
+        current_layer_count > 0 ? layers [current_layer_count - 1].neuron_count : input_size,
+        weights,
+        biases,
+        new double [neuron_count]
     };
     current_layer_count ++;
 }
