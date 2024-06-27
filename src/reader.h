@@ -7,28 +7,23 @@
 #include <regex>
 #include <string>
 #include <vector>
+#include "main.h"
 
 using namespace std;
 
-class Parser {
+class Reader {
 private:
     string FILE_NAME;
 
 public:
     // Constructor
-    Parser(string fileName);
+    Reader(string fileName);
 
-    // Function: Parses values from file to a vector
-    void parseToVector(vector<long double> &vector);
+    // Function: reads values from file to a vector
+    void readInput(double* vector);
 
-    // Function: Parses values from file to a matrix
-    void parseToMatrix(vector<vector<long double> > &matrix, int dimX, int dimY);
-
-    // Function: Parses Weights from a file to a matrix
-    void parseWeights(vector<vector<long double> > &weights, int layer, int dimIn, int dimOut);
-
-    // Function: Parses Biases from a file to a vector
-    void parseBiases(vector<long double> &biases, int layer);
+    // Function: reads Weights from a file to a matrix
+    void readParameters(Parameters *parameters);
 };
 
-#endif // READER_H
+#endif 

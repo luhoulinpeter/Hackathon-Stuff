@@ -9,8 +9,8 @@
 
 #include "reader.h"
 #include "model.h"
+#include "main.h"
 #include <iostream>
-#include <fstream>
 #include <filesystem>
 #include <chrono>
 
@@ -128,58 +128,124 @@ int main () {
     }
     cout << "Average directory processing time: " << avg / repeats << " milliseconds" << endl;
     
+    /*-----------------------------------------------------------------------------------------------*/
+    /*                                     MY PART                                                   */
+    /*-----------------------------------------------------------------------------------------------*/
+    Parameters *parameters = (Parameters *)malloc(sizeof(Parameters));
 
-    /*// Create matrices and vectors
-    vector<long double> inputVector;
-    vector<vector<long double> > inputMatrix;
+    // Allocate memory
+    parameters->weightsL1 = (double *)malloc(22050 * sizeof(double));
+    parameters->weightsL2 = (double *)malloc(6370 * sizeof(double));
+    parameters->weightsL3 = (double *)malloc(3250 * sizeof(double));
+    parameters->weightsL4 = (double *)malloc(1500 * sizeof(double));
+    parameters->weightsL5 = (double *)malloc(750 * sizeof(double));
+    parameters->weightsL6 = (double *)malloc(1000 * sizeof(double));
+    parameters->weightsL7 = (double *)malloc(2080 * sizeof(double));
 
-    vector<vector<long double> > weightsL1;
-    vector<vector<long double> > weightsL2;
-    vector<vector<long double> > weightsL3;
-    vector<vector<long double> > weightsL4;
-    vector<vector<long double> > weightsL5;
-    vector<vector<long double> > weightsL6;
-    vector<vector<long double> > weightsL7;
+    parameters->biasesL1 = (double *)malloc(98 * sizeof(double));
+    parameters->biasesL2 = (double *)malloc(65 * sizeof(double));
+    parameters->biasesL3 = (double *)malloc(50 * sizeof(double));
+    parameters->biasesL4 = (double *)malloc(30 * sizeof(double));
+    parameters->biasesL5 = (double *)malloc(25 * sizeof(double));
+    parameters->biasesL6 = (double *)malloc(40 * sizeof(double));
+    parameters->biasesL7 = (double *)malloc(52 * sizeof(double));
+
+    // read Weights and Biases
+    Reader weightsReader("weights_and_biases.txt");
+    weightsReader.readParameters(parameters);
+
+    // Initialize model
+    Model model (7, 225);
+    // What a nice temporary solution!
+    model.add_layer (98, parameters->weightsL1, parameters->biasesL1);
+    model.add_layer (65, parameters->weightsL2, parameters->biasesL2);
+    model.add_layer (50, parameters->weightsL3, parameters->biasesL3);
+    model.add_layer (30, parameters->weightsL4, parameters->biasesL4);
+    model.add_layer (25, parameters->weightsL5, parameters->biasesL5);
+    model.add_layer (40, parameters->weightsL6, parameters->biasesL6);
+    model.add_layer (52, parameters->weightsL7, parameters->biasesL7);
+    
+    // Dark magic
+    string tensors_path = filesystem::current_path ().string () + "/tensors";
+    string path = (*filesystem::directory_iterator (tensors_path)).path ().string ();
+    int digits = path.size () - 8 - tensors_path.size ();
+    int size = 1;
+    for (int i = 0; i < digits; i ++, size *= 10);
+    char* aux = new char [size];
+
+    // Processing every file
+    int cnt = 1;
+    for (auto& entry : filesystem::directory_iterator (tensors_path)) {
+        // Reading data and processing
+        string path = entry.path ().string ();
+        double *input = (double *)malloc(225 * sizeof(double));
+        Reader tensorReader (path);
+        tensorReader.readInput (input);
+        int res = model.forward_pass (input);
+
+        // Converting and saving the result
+        char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
+        string substr = path.substr (tensors_path.size () + 1, digits);
+        aux [stoi (substr)] = letter;
+        cout << "For \'" << substr <<  "\' the result is " << letter << '\n';
+        cnt ++;
+    }
+    cout << aux << '\n';
+
+    // Writing results to csv
+    ofstream fout ("results.csv");
+    fout << "image number,label" << '\n';
+    for (int i = 1; i <= cnt; i ++) {
+        fout << i << ',' << aux [i] << '\n';
+    }
+    fout.close ();
+    delete[] aux;
+
+    // Clear Memory
+
+    /*-----------------------------------------------------------------------------------------------*/
+    /*-----------------------------------------------------------------------------------------------*/
+    /*-----------------------------------------------------------------------------------------------*/
 
     //exmple of using new to declare dynamic arrs
     // double* var = new double [88];
     // delete[] var;
 
-    vector<long double> biasesL1;
-    vector<long double> biasesL2;
-    vector<long double> biasesL3;
-    vector<long double> biasesL4;
-    vector<long double> biasesL5;
-    vector<long double> biasesL6;
-    vector<long double> biasesL7;
+    // vector<long double> biasesL1;
+    // vector<long double> biasesL2;
+    // vector<long double> biasesL3;
+    // vector<long double> biasesL4;
+    // vector<long double> biasesL5;
+    // vector<long double> biasesL6;
+    // vector<long double> biasesL7;
 
-    // Parse Input Tensor
-    Parser tensorParser("tensors/01out.txt");
+    // // Parse Input Tensor
+    // Parser tensorParser("tensors/01out.txt");
 
-    // Parse to Vector and Matrix
-    tensorParser.parseToVector(inputVector);
-    tensorParser.parseToMatrix(inputMatrix, 15, 15);
+    // // Parse to Vector and Matrix
+    // tensorParser.parseToVector(inputVector);
+    // tensorParser.parseToMatrix(inputMatrix, 15, 15);
 
-    // Parse Weights and Biases
-    Parser weightsParser("weights_and_biases.txt");
+    // // Parse Weights and Biases
+    // Parser weightsParser("weights_and_biases.txt");
 
-    // Parse Weights
-    weightsParser.parseWeights(weightsL1, 1, 225, 98);
-    weightsParser.parseWeights(weightsL2, 2, 98, 65);
-    weightsParser.parseWeights(weightsL3, 3, 65, 50);
-    weightsParser.parseWeights(weightsL4, 4, 50, 30);
-    weightsParser.parseWeights(weightsL5, 5, 30, 25);
-    weightsParser.parseWeights(weightsL6, 6, 25, 40);
-    weightsParser.parseWeights(weightsL7, 7, 40, 52);
+    // // Parse Weights
+    // weightsParser.parseWeights(weightsL1, 1, 225, 98);
+    // weightsParser.parseWeights(weightsL2, 2, 98, 65);
+    // weightsParser.parseWeights(weightsL3, 3, 65, 50);
+    // weightsParser.parseWeights(weightsL4, 4, 50, 30);
+    // weightsParser.parseWeights(weightsL5, 5, 30, 25);
+    // weightsParser.parseWeights(weightsL6, 6, 25, 40);
+    // weightsParser.parseWeights(weightsL7, 7, 40, 52);
 
-    // Parse Biases
-    weightsParser.parseBiases(biasesL1, 1);
-    weightsParser.parseBiases(biasesL2, 2);
-    weightsParser.parseBiases(biasesL3, 3);
-    weightsParser.parseBiases(biasesL4, 4);
-    weightsParser.parseBiases(biasesL5, 5);
-    weightsParser.parseBiases(biasesL6, 6);
-    weightsParser.parseBiases(biasesL7, 7);*/
+    // // Parse Biases
+    // weightsParser.parseBiases(biasesL1, 1);
+    // weightsParser.parseBiases(biasesL2, 2);
+    // weightsParser.parseBiases(biasesL3, 3);
+    // weightsParser.parseBiases(biasesL4, 4);
+    // weightsParser.parseBiases(biasesL5, 5);
+    // weightsParser.parseBiases(biasesL6, 6);
+    // weightsParser.parseBiases(biasesL7, 7);
 
     return 0;
 }
