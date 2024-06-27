@@ -15,6 +15,7 @@
 
 using namespace std;
 
+
 // Converts a string to double*
 double* str_to_a (const string& s, int expected) {
     double* arr = new double [expected];
@@ -39,9 +40,71 @@ double* bonk (string filename) {
     return str_to_a (s, 225);
 }
 
+
+// Initializes model
+void init_model (Model& model) {
+    ifstream fmodel ("weights_and_biases.txt");
+    string weights, biases;
+    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
+    model.add_layer (98, str_to_a (weights, 225 * 98), str_to_a (biases, 98));
+    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
+    model.add_layer (65, str_to_a (weights, 98 * 65), str_to_a (biases, 65));
+    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
+    model.add_layer (50, str_to_a (weights, 65 * 50), str_to_a (biases, 50));
+    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
+    model.add_layer (30, str_to_a (weights, 50 * 30), str_to_a (biases, 30));
+    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
+    model.add_layer (25, str_to_a (weights, 25 * 30), str_to_a (biases, 25));
+    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
+    model.add_layer (40, str_to_a (weights, 40 * 30), str_to_a (biases, 40));
+    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
+    model.add_layer (52, str_to_a (weights, 52 * 40), str_to_a (biases, 52));
+    fmodel.close ();
+}
+
+
+// Processes all tensors in a directory
+void process_directory (Model& model) {
+    // Dark magic
+    string tensors_path = filesystem::current_path ().string () + "/tensors";
+    string path = (*filesystem::directory_iterator (tensors_path)).path ().string ();
+    int digits = path.size () - 8 - tensors_path.size ();
+    int size = 1;
+    for (int i = 0; i < digits; i ++, size *= 10);
+    char* aux = new char [size];
+
+    // Processing every file in directory
+    int cnt = 1;
+    for (auto& entry : filesystem::directory_iterator (tensors_path)) {
+        // Reading data and processing
+        string path = entry.path ().string ();
+        int res = model.forward_pass (bonk (path));
+
+        // Converting and saving the result
+        char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
+        aux [stoi (path.substr (tensors_path.size () + 1, digits))] = letter;
+        cnt ++;
+    }
+
+    // Writing results to csv
+    ofstream fout ("results.csv");
+    fout << "image number,label" << '\n';
+    for (int i = 1; i < cnt; i ++) {
+        fout << i << ',' << aux [i] << '\n';
+        cout << aux [i] << ' ';
+    } cout << endl;
+    fout.close ();
+    delete[] aux;
+}
+
+
 int main () {
     // Optimisations to try:
     // .tie, ios_base::sync_with_stdio, .flush
+
+    Model model (7, 225);
+    init_model (model);
+    process_directory (model);
 
     /*// Create matrices and vectors
     vector<long double> inputVector;
@@ -94,56 +157,6 @@ int main () {
     weightsParser.parseBiases(biasesL5, 5);
     weightsParser.parseBiases(biasesL6, 6);
     weightsParser.parseBiases(biasesL7, 7);*/
-
-    // Initialize model
-    Model model (7, 225);
-    ifstream fmodel ("weights_and_biases.txt");
-    string weights, biases;
-    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
-    model.add_layer (98, str_to_a (weights, 225 * 98), str_to_a (biases, 98));
-    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
-    model.add_layer (65, str_to_a (weights, 98 * 65), str_to_a (biases, 65));
-    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
-    model.add_layer (50, str_to_a (weights, 65 * 50), str_to_a (biases, 50));
-    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
-    model.add_layer (30, str_to_a (weights, 50 * 30), str_to_a (biases, 30));
-    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
-    model.add_layer (25, str_to_a (weights, 25 * 30), str_to_a (biases, 25));
-    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
-    model.add_layer (40, str_to_a (weights, 40 * 30), str_to_a (biases, 40));
-    getline (fmodel, weights); getline (fmodel, weights); getline (fmodel, biases); getline (fmodel, biases);
-    model.add_layer (52, str_to_a (weights, 52 * 40), str_to_a (biases, 52));
-    
-    // Dark magic
-    string tensors_path = filesystem::current_path ().string () + "/tensors";
-    string path = (*filesystem::directory_iterator (tensors_path)).path ().string ();
-    int digits = path.size () - 8 - tensors_path.size ();
-    int size = 1;
-    for (int i = 0; i < digits; i ++, size *= 10);
-    char* aux = new char [size];
-
-    // Processing every file in directory
-    int cnt = 1;
-    for (auto& entry : filesystem::directory_iterator (tensors_path)) {
-        // Reading data and processing
-        string path = entry.path ().string ();
-        int res = model.forward_pass (bonk (path));
-
-        // Converting and saving the result
-        char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
-        aux [stoi (path.substr (tensors_path.size () + 1, digits))] = letter;
-        cnt ++;
-    }
-
-    // Writing results to csv
-    ofstream fout ("results.csv");
-    fout << "image number,label" << '\n';
-    for (int i = 1; i < cnt; i ++) {
-        fout << i << ',' << aux [i] << '\n';
-        cout << aux [i] << ' ';
-    } cout << endl;
-    fout.close ();
-    delete[] aux;
 
     return 0;
 }
