@@ -60,6 +60,10 @@ int main () {
     vector<vector<long double> > weightsL6;
     vector<vector<long double> > weightsL7;
 
+    //exmple of using new to declare dynamic arrs
+    // double* var = new double [88];
+    // delete[] var;
+
     vector<long double> biasesL1;
     vector<long double> biasesL2;
     vector<long double> biasesL3;
