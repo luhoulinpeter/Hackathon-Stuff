@@ -12,6 +12,9 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <chrono>
+
+#define elapsed chrono::duration_cast <chrono::microseconds> (chrono::system_clock::now () - start).count () / 1000.0
 
 using namespace std;
 
@@ -91,8 +94,9 @@ void process_directory (Model& model) {
     fout << "image number,label" << '\n';
     for (int i = 1; i < cnt; i ++) {
         fout << i << ',' << aux [i] << '\n';
-        cout << aux [i] << ' ';
-    } cout << endl;
+        //cout << aux [i] << ' ';
+    }
+    //cout << endl;
     fout.close ();
     delete[] aux;
 }
@@ -102,9 +106,28 @@ int main () {
     // Optimisations to try:
     // .tie, ios_base::sync_with_stdio, .flush
 
+    // Initialize model
+    auto start = chrono::system_clock::now ();
     Model model (7, 225);
     init_model (model);
-    process_directory (model);
+    cout << "Model initialized in " << elapsed << " milliseconds" << endl;
+
+    // Process directory (once)
+    // start = chrono::system_clock::now ();
+    // process_directory (model);
+    // cout << "Directory processed in " << elapsed << " milliseconds" << endl;
+
+    // Process directory (avg)
+    int repeats = 1000;
+    long double avg = 0;
+    for (int i = 0; i < repeats; i ++) {
+        start = chrono::system_clock::now ();
+        process_directory (model);
+        avg += elapsed;
+        if (i % 100 == 0) { cout << "Completed " << i << " repeats" << endl; }
+    }
+    cout << "Average directory processing time: " << avg / repeats << " milliseconds" << endl;
+    
 
     /*// Create matrices and vectors
     vector<long double> inputVector;
