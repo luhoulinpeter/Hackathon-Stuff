@@ -119,16 +119,16 @@ int main () {
         char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
         string substr = path.substr (tensors_path.size () + 1, digits);
         aux [stoi (substr)] = letter;
-        cout << "For \'" << substr <<  "\' the result is " << letter << endl;
+        cout << "For \'" << substr <<  "\' the result is " << letter << '\n';
         cnt ++;
     }
-    cout << aux << endl;
+    cout << aux << '\n';
 
     // Writing results to csv
     ofstream fout ("results.csv");
-    fout << "image number,label" << endl;
+    fout << "image number,label" << '\n';
     for (int i = 1; i <= cnt; i ++) {
-        fout << i << ',' << aux [i] << endl;
+        fout << i << ',' << aux [i] << '\n';
     }
     fout.close ();
     delete[] aux;
