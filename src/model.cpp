@@ -30,7 +30,7 @@ void Model::Layer::process (double* input, bool is_output) {
         for (int i = 0; i < neuron_count; i ++) {
             //minimise branching
             // int if_else;
-            // if_else = outputs[i] < 0;
+            // if_else = outputs[i] > 0;
             // outputs[i] *= if_else;
 
             if (outputs [i] < 0) {
