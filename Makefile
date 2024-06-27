@@ -34,5 +34,3 @@ clean:
 	rm -rf $(BUILD_DIR) $(BIN_DIR)
 
 .PHONY: all clean
-
-# Test
