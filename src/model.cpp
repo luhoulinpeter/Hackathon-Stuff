@@ -1,6 +1,6 @@
 #include "model.h"
 #include <cmath>
-#include <iostream>
+
 using namespace std;
 
 // Process current layer in forward propagation
