@@ -38,16 +38,6 @@ double* v2D_to_a (const vector <vector <long double> >& weights) {
 }
 
 int main () {
-    // Look-Up Dictionary
-    map<int, char> letterMap;
-    for (int i = 0; i < 52; ++i) {
-        if (i % 2 == 1) {
-            letterMap[i] = 'A' + (i) / 2;  
-        } else {
-            letterMap[i] = 'a' + (i - 1) / 2;  
-        }
-    }
-
     // Create matrices and vectors
     vector<long double> inputVector;
     vector<vector<long double> > inputMatrix;
