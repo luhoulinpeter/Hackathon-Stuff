@@ -1,11 +1,10 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *        StartHack Hackathon HPC Neural Network on Digit Recognition Sponsered by QDX       *
- *                                          Authors                                          *
- *                   Carlvince Tan, Lucas Yu, Peter Lu, Volodymyr Kazmirchuk                 *
- *                                                                                           *
- *                          (SHORT DESCRIPTION OF NEURAL NETWORK)                            *
- *                                                                                           *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/**
+ * @file main.cpp
+ * @brief StartHack Hackathon HPC Neural Network on Digit Recognition Sponsered by QDX
+ * @authors Carlvince Tan, Lucas Yu, Peter Lu, Volodymyr Kazmirchuk
+ * @date 2024
+ * @copyright University of Melbourne
+*/
 
 #include "reader.h"
 #include "model.h"
@@ -19,8 +18,9 @@
 
 using namespace std;
 
-
-// Initializes model
+/**
+ * Model Initialisation
+*/
 void init_model (Model& model) {
     // Read weights and biases
     Parameters* parameters = new Parameters;
@@ -39,7 +39,9 @@ void init_model (Model& model) {
 }
 
 
-// Processes all tensors in a directory
+/**
+ * Process all tensors in /tensors directory
+*/
 void process_directory (Model& model, int repeats = 1) {
     // Dark magic
     string tensors_path = filesystem::current_path ().string () + "/tensors";
@@ -91,6 +93,10 @@ void process_directory (Model& model, int repeats = 1) {
 // Stings:  reconsider getline
 // Math:    multiple inputs, simpler exp
 // General: malloc vs new, multiprocessing
+
+/**
+ * Single-Thread execution of Model Inference
+*/
 int main () {
 
     // Initialize model

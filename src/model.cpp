@@ -2,8 +2,10 @@
 #include <cmath>
 
 
-// Process current layer in forward propagation
-// Takes input to it and a flag whether it's the last layer in a model
+/**
+ * Process current layer in forward propagation
+ * Takes input to it and a flag whether it's the last layer in a model
+*/
 void Model::Layer::process (double* input, bool is_output) {
     for (int i = 0; i < neuron_count; i ++) {
         outputs [i] = 0;
