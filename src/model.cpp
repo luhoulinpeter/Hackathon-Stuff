@@ -1,10 +1,11 @@
 #include "model.h"
 #include <cmath>
 
-using namespace std;
 
-// Process current layer in forward propagation
-// Takes input to it and a flag whether it's the last layer in a model
+/**
+ * Process current layer in forward propagation
+ * Takes input to it and a flag whether it's the last layer in a model
+*/
 void Model::Layer::process (double* input, bool is_output) {
     for (int i = 0; i < neuron_count; i ++) {
         outputs [i] = 0;
@@ -19,7 +20,7 @@ void Model::Layer::process (double* input, bool is_output) {
         // Softmax
         double exp_sum = 0;
         for (int i = 0; i < neuron_count; i ++) {
-            exp_sum += exp (outputs [i]);  // Possible optimisation: use simpler exp
+            exp_sum += exp (outputs [i]);
         }
         for (int i = 0; i < neuron_count; i ++) {
             outputs [i] = exp (outputs [i]) / exp_sum;
@@ -48,12 +49,11 @@ Model::Model (int layers_count, int input_size) {
 // Takes number of neurons in this layers along with their weights and biases
 void Model::add_layer (int neuron_count, double* weights, double* biases) {
     layers [current_layer_count] = {
-        .neuron_count = neuron_count,
-        .input_count = current_layer_count > 0 ?
-            layers [current_layer_count - 1].neuron_count : input_size,
-        .weights = weights,
-        .biases = biases,
-        .outputs = new double [neuron_count]
+        neuron_count,
+        current_layer_count > 0 ? layers [current_layer_count - 1].neuron_count : input_size,
+        weights,
+        biases,
+        new double [neuron_count]
     };
     current_layer_count ++;
 }
@@ -64,6 +64,7 @@ void Model::add_layer (int neuron_count, double* weights, double* biases) {
 int Model::forward_pass (double* input) {
     // Process input -> first layer
     layers [0].process (input, false);
+    delete[] input;
 
     // Process layer K -> layer K + 1
     for (int i = 1; i < layer_count - 1; i ++) {

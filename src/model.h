@@ -1,7 +1,9 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-// Neural network model class
+/**
+ * Neural network model class
+*/
 class Model {
 private:
 

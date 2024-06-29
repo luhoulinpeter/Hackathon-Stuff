@@ -1,97 +1,119 @@
-/*
- * Functions that parse input array to either Vector or Matrix
- */
 #include "reader.h"
+#include <fstream>
+#include <sstream>
 
-// Constructor definition
-Parser::Parser(string fileName) {
-    FILE_NAME = fileName;
+using namespace std;
+
+
+// Allocate memory
+Parameters::Parameters () {
+    weightsL1 = new double [225*98];
+    weightsL2 = new double [98*65];
+    weightsL3 = new double [65*50];
+    weightsL4 = new double [50*30];
+    weightsL5 = new double [30*25];
+    weightsL6 = new double [25*40];
+    weightsL7 = new double [40*52];
+
+    biasesL1 = new double [98];
+    biasesL2 = new double [65];
+    biasesL3 = new double [50];
+    biasesL4 = new double [30];
+    biasesL5 = new double [25];
+    biasesL6 = new double [40];
+    biasesL7 = new double [52];
 }
 
-void Parser::parseToVector(vector<long double> &vector) {
-    ifstream file(FILE_NAME);
 
-    string line;
-    getline(file, line);
-
-    stringstream stream(line);
-    string token;
-
-    // Parse long doubles into vector
-    while (getline(stream, token, ',')) {
-        vector.push_back(stold(token));
-    }
-
-    file.close();
-}
-
-void Parser::parseToMatrix(vector<vector<long double> > &matrix, int dimX, int dimY) {
-    ifstream file(FILE_NAME);
-
-    string line;
-    getline(file, line);
-
-    stringstream stream(line);
-    string token;
-
-    // Initialize matrix with dimensions
-    matrix.resize(dimY, vector<long double>(dimX));
-
-    // Parse long doubles into matrix
+// Parses a line into an array
+void parseLine (const string& line, double* values) {
     int count = 0;
-    while (getline(stream, token, ',')) {
-        matrix[count / dimX][count % dimX] = stold(token);
-        count++;
-    }
+    istringstream stream (line);
+    string token;
 
-    file.close();
+    while (getline (stream, token, ',')) {
+        values [count ++] = stod (token);
+    }
 }
 
-void Parser::parseWeights(vector<vector<long double> > &weights, int layer, int dimIn, int dimOut) {
-    ifstream file(FILE_NAME);
+// void parseLine(string line, double *values) {
+//     int count = 0;
+//     string token = "";
+//     for (char c : line) {
+//         if (c == ',') {
+//             values[count++] = stod(token);
+//             token.clear(); 
+//         } else {
+//             token.push_back(c);
+//         }
+//     }
 
+//     if (!token.empty()) {
+//         values[count++] = stod(token);
+//     }
+// }
+
+
+// Read values from file to an array
+double* read_input (const string& filename) {
+    ifstream file (filename);
     string line;
-    while (getline(file, line)) {
-        if (regex_match(line, regex("fc" + to_string(layer) + R"(.*\.weight:$)"))) {
-            // Read in next line
-            getline(file, line);
+    getline (file, line);
+    file.close ();
 
-            stringstream stream(line);
-            string token;
-
-            // Initialize weights matrix with dimensions
-            weights.resize(dimOut, vector<long double>(dimIn));
-
-            // Parse long doubles into matrix
-            int count = 0;
-            while (getline(stream, token, ',')) {
-                weights[count / dimIn][count % dimIn] = stold(token);
-                count++;
-            }
-        }
-    }
-
-    file.close();
+    double* arr = new double [225];
+    parseLine (line, arr);
+    return arr;
 }
 
-void Parser::parseBiases(vector<long double> &biases, int layer) {
-    ifstream file(FILE_NAME);
 
+// Reads weights from file to parameters
+void read_parameters(const string& filename, Parameters *parameters) {
+    ifstream file (filename);
     string line;
-    while (getline(file, line)) {
-        if (regex_match(line, regex("fc" + to_string(layer) + R"(.*\.bias:$)"))) {
-            // Read in next line
-            getline(file, line);
-
-            stringstream stream(line);
-            string token;
-
-            // Parse long doubles into vector
-            while (getline(stream, token, ',')) {
-                biases.push_back(stold(token));
-            }
-        }
-    }
+    
+    getline(file, line);
+    getline(file, line);
+    parseLine(line, parameters->weightsL1);
+    getline(file, line);
+    getline(file, line);
+    parseLine(line, parameters->biasesL1);
+    getline(file, line);
+    getline(file, line);
+    parseLine(line, parameters->weightsL2);
+    getline(file, line);
+    getline(file, line);
+    parseLine(line, parameters->biasesL2);
+    getline(file, line);
+    getline(file, line);
+    parseLine(line, parameters->weightsL3);
+    getline(file, line);
+    getline(file, line);
+    parseLine(line, parameters->biasesL3);
+    getline(file, line);
+    getline(file, line);
+    parseLine(line, parameters->weightsL4);
+    getline(file, line);
+    getline(file, line);
+    parseLine(line, parameters->biasesL4);
+    getline(file, line);
+    getline(file, line);
+    parseLine(line, parameters->weightsL5);
+    getline(file, line);
+    getline(file, line);
+    parseLine(line, parameters->biasesL5);
+    getline(file, line);
+    getline(file, line);
+    parseLine(line, parameters->weightsL6);
+    getline(file, line);
+    getline(file, line);
+    parseLine(line, parameters->biasesL6);
+    getline(file, line);
+    getline(file, line);
+    parseLine(line, parameters->weightsL7);
+    getline(file, line);
+    getline(file, line);
+    parseLine(line, parameters->biasesL7);
 
     file.close();
 }

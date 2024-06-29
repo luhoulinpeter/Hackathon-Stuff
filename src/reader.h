@@ -1,34 +1,33 @@
 #ifndef READER_H
 #define READER_H
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <regex>
 #include <string>
-#include <vector>
 
-using namespace std;
+// Define the Parameters struct
+struct Parameters {
+    double *weightsL1;
+    double *weightsL2;
+    double *weightsL3;
+    double *weightsL4;
+    double *weightsL5;
+    double *weightsL6;
+    double *weightsL7;
 
-class Parser {
-private:
-    string FILE_NAME;
+    double *biasesL1;
+    double *biasesL2;
+    double *biasesL3;
+    double *biasesL4;
+    double *biasesL5;
+    double *biasesL6;
+    double *biasesL7;
 
-public:
-    // Constructor
-    Parser(string fileName);
-
-    // Function: Parses values from file to a vector
-    void parseToVector(vector<long double> &vector);
-
-    // Function: Parses values from file to a matrix
-    void parseToMatrix(vector<vector<long double> > &matrix, int dimX, int dimY);
-
-    // Function: Parses Weights from a file to a matrix
-    void parseWeights(vector<vector<long double> > &weights, int layer, int dimIn, int dimOut);
-
-    // Function: Parses Biases from a file to a vector
-    void parseBiases(vector<long double> &biases, int layer);
+    Parameters ();
 };
 
-#endif // READER_H
+// Read values from file to an array
+double* read_input (const std::string& filename);
+
+// Reads weights from file to parameters
+void read_parameters (const std::string& filename, Parameters* parameters);
+
+#endif 
