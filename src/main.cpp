@@ -22,10 +22,10 @@ using namespace std;
 /**
  * Model Initialisation
 */
-void init_model (Model& model) {
+void init_model (Model& model, bool from_file = true) {
     // Read weights and biases
     Parameters* parameters = new Parameters;
-    read_parameters ("weights_and_biases.txt", parameters);
+    if (from_file) { read_parameters ("weights_and_biases.txt", parameters); }
 
     // Initialize model
     model.add_layer (98, parameters->weightsL1, parameters->biasesL1);
@@ -92,28 +92,43 @@ void process_directory (Model& model, int repeats = 1) {
 
 
 // Optimisations to try
-// IO:      ios_base::sync_with_stdio, .tie, .flush     - Done, +
-// Stings:  reconsider getline                          - On hold
+// IO:      sync_with_stdio, .tie, .flush     - Done
+// Stings:  reconsider getline                - On hold
 // Math:    multiple inputs, simpler exp
-// General: malloc vs new, multiprocessing
+// General: malloc vs new                     - Unable to test because of caching, probably should stick to malloc
+// Mp:      multiprocessing vs threading
 
 /**
  * Single-Thread execution of Model Inference
 */
-int main () {
+int main (int argc, char* argv[]) {
     ios_base::sync_with_stdio (false);
 
-    // Initialize model
-    auto NOW;
-    Model model (7, 225);
-    init_model (model);
-    cout << "Model initialized in " << ELAPSED << " milliseconds" << endl;
+    // Memory allocation testing
+    if (argc > 1) {
+        int repeats = atoi (argv [1]);
+        long double avg = 0;
+        for (int i = 0; i < repeats; i ++) {
+            auto NOW;
+            {
+                Model model (7, 225);
+                init_model (model, false);
+            }
+            avg += ELAPSED;
+        }
+        cout << "Average model initializing time: " << avg * 1000 / repeats << " microseconds" << endl;
+    }
+    // General model pereformance
+    else {
+        // Initialize model
+        auto NOW;
+        Model model (7, 225);
+        init_model (model);
+        cout << "Model initialized in " << ELAPSED << " milliseconds" << endl;
 
-    // Process directory (avg)
-    process_directory (model, 500);
-    // NOW;
-    // process_directory (model);
-    // cout << "Done in " << ELAPSED << " milliseconds" << endl;
+        // Process directory (avg)
+        process_directory (model, 1);
+    }
     
     return 0;
 }
