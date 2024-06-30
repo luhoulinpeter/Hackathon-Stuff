@@ -4,29 +4,34 @@
 
 using namespace std;
 
-
-// Allocate memory
+/**
+ * Parameters constructor
+ * Allocates memory
+ */
 Parameters::Parameters () {
-    weightsL1 = new double [225*98];
-    weightsL2 = new double [98*65];
-    weightsL3 = new double [65*50];
-    weightsL4 = new double [50*30];
-    weightsL5 = new double [30*25];
-    weightsL6 = new double [25*40];
-    weightsL7 = new double [40*52];
+    weightsL1 = new double [INPUT*L1];
+    weightsL2 = new double [L1*L2];
+    weightsL3 = new double [L2*L3];
+    weightsL4 = new double [L3*L4];
+    weightsL5 = new double [L4*L5];
+    weightsL6 = new double [L5*L6];
+    weightsL7 = new double [L6*L7];
 
-    biasesL1 = new double [98];
-    biasesL2 = new double [65];
-    biasesL3 = new double [50];
-    biasesL4 = new double [30];
-    biasesL5 = new double [25];
-    biasesL6 = new double [40];
-    biasesL7 = new double [52];
+    biasesL1 = new double [L1];
+    biasesL2 = new double [L2];
+    biasesL3 = new double [L3];
+    biasesL4 = new double [L4];
+    biasesL5 = new double [L5];
+    biasesL6 = new double [L6];
+    biasesL7 = new double [L7];
 }
 
 
-// Parses a line into an array
-void parseLine (const string& line, double* values) {
+/**
+ * Parse a line into an array
+ * Takes a line to be parse and array to insert parsed values into
+ */
+void parse_line (const string& line, double* values) {
     int count = 0;
     istringstream stream (line);
     string token;
@@ -36,84 +41,75 @@ void parseLine (const string& line, double* values) {
     }
 }
 
-// void parseLine(string line, double *values) {
-//     int count = 0;
-//     string token = "";
-//     for (char c : line) {
-//         if (c == ',') {
-//             values[count++] = stod(token);
-//             token.clear(); 
-//         } else {
-//             token.push_back(c);
-//         }
-//     }
 
-//     if (!token.empty()) {
-//         values[count++] = stod(token);
-//     }
-// }
-
-
-// Read values from file to an array
+/**
+ * Read values from file to an array
+ * Takes a filename to read an input from and returns an array of values
+ */
 double* read_input (const string& filename) {
     ifstream file (filename);
     string line;
     getline (file, line);
     file.close ();
 
-    double* arr = new double [225];
-    parseLine (line, arr);
+    double* arr = new double [INPUT];
+    parse_line (line, arr);
     return arr;
 }
 
 
-// Reads weights from file to parameters
-void read_parameters(const string& filename, Parameters *parameters) {
+/**
+ * Read weights and biases from file to parameters
+ * Takes a weights filename and returns a Parameters structure with parsed values
+ */
+Parameters* read_parameters (const string& filename) {
+    Parameters* parameters = new Parameters;
     ifstream file (filename);
     string line;
     
-    getline(file, line);
-    getline(file, line);
-    parseLine(line, parameters->weightsL1);
-    getline(file, line);
-    getline(file, line);
-    parseLine(line, parameters->biasesL1);
-    getline(file, line);
-    getline(file, line);
-    parseLine(line, parameters->weightsL2);
-    getline(file, line);
-    getline(file, line);
-    parseLine(line, parameters->biasesL2);
-    getline(file, line);
-    getline(file, line);
-    parseLine(line, parameters->weightsL3);
-    getline(file, line);
-    getline(file, line);
-    parseLine(line, parameters->biasesL3);
-    getline(file, line);
-    getline(file, line);
-    parseLine(line, parameters->weightsL4);
-    getline(file, line);
-    getline(file, line);
-    parseLine(line, parameters->biasesL4);
-    getline(file, line);
-    getline(file, line);
-    parseLine(line, parameters->weightsL5);
-    getline(file, line);
-    getline(file, line);
-    parseLine(line, parameters->biasesL5);
-    getline(file, line);
-    getline(file, line);
-    parseLine(line, parameters->weightsL6);
-    getline(file, line);
-    getline(file, line);
-    parseLine(line, parameters->biasesL6);
-    getline(file, line);
-    getline(file, line);
-    parseLine(line, parameters->weightsL7);
-    getline(file, line);
-    getline(file, line);
-    parseLine(line, parameters->biasesL7);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> weightsL1);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> biasesL1);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> weightsL2);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> biasesL2);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> weightsL3);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> biasesL3);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> weightsL4);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> biasesL4);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> weightsL5);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> biasesL5);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> weightsL6);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> biasesL6);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> weightsL7);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> biasesL7);
 
-    file.close();
+    file.close ();
+    return parameters;
 }

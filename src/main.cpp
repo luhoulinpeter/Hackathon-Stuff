@@ -19,22 +19,22 @@
 
 using namespace std;
 
+
 /**
- * Model Initialisation
+ * Model initialisation
 */
-void init_model (Model& model, bool from_file = true) {
+void init_model (Model& model) {
     // Read weights and biases
-    Parameters* parameters = new Parameters;
-    if (from_file) { read_parameters ("weights_and_biases.txt", parameters); }
+    Parameters* parameters = read_parameters ("weights_and_biases.txt");
 
     // Initialize model
-    model.add_layer (98, parameters->weightsL1, parameters->biasesL1);
-    model.add_layer (65, parameters->weightsL2, parameters->biasesL2);
-    model.add_layer (50, parameters->weightsL3, parameters->biasesL3);
-    model.add_layer (30, parameters->weightsL4, parameters->biasesL4);
-    model.add_layer (25, parameters->weightsL5, parameters->biasesL5);
-    model.add_layer (40, parameters->weightsL6, parameters->biasesL6);
-    model.add_layer (52, parameters->weightsL7, parameters->biasesL7);
+    model.add_layer (98, parameters -> weightsL1, parameters -> biasesL1);
+    model.add_layer (65, parameters -> weightsL2, parameters -> biasesL2);
+    model.add_layer (50, parameters -> weightsL3, parameters -> biasesL3);
+    model.add_layer (30, parameters -> weightsL4, parameters -> biasesL4);
+    model.add_layer (25, parameters -> weightsL5, parameters -> biasesL5);
+    model.add_layer (40, parameters -> weightsL6, parameters -> biasesL6);
+    model.add_layer (52, parameters -> weightsL7, parameters -> biasesL7);
 
     delete parameters;
 }
@@ -92,43 +92,23 @@ void process_directory (Model& model, int repeats = 1) {
 
 
 // Optimisations to try
-// IO:      sync_with_stdio, .tie, .flush     - Done
-// Stings:  reconsider getline                - On hold
 // Math:    multiple inputs, simpler exp
-// General: malloc vs new                     - Unable to test because of caching, probably should stick to malloc
 // Mp:      multiprocessing vs threading
 
 /**
  * Single-Thread execution of Model Inference
 */
-int main (int argc, char* argv[]) {
+int main () {
     ios_base::sync_with_stdio (false);
 
-    // Memory allocation testing
-    if (argc > 1) {
-        int repeats = atoi (argv [1]);
-        long double avg = 0;
-        for (int i = 0; i < repeats; i ++) {
-            auto NOW;
-            {
-                Model model (7, 225);
-                init_model (model, false);
-            }
-            avg += ELAPSED;
-        }
-        cout << "Average model initializing time: " << avg * 1000 / repeats << " microseconds" << endl;
-    }
-    // General model pereformance
-    else {
-        // Initialize model
-        auto NOW;
-        Model model (7, 225);
-        init_model (model);
-        cout << "Model initialized in " << ELAPSED << " milliseconds" << endl;
+    // Initialize model
+    auto NOW;
+    Model model (LAYERS, INPUT);
+    init_model (model);
+    cout << "Model initialized in " << ELAPSED << " milliseconds" << endl;
 
-        // Process directory (avg)
-        process_directory (model, 1);
-    }
+    // Process directory (avg)
+    process_directory (model, 1);
     
     return 0;
 }

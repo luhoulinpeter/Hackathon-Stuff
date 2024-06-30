@@ -1,10 +1,9 @@
 #include "model.h"
 #include <cmath>
 
-
 /**
- * Process current layer in forward propagation
- * Takes input to it and a flag whether it's the last layer in a model
+ * Layer processing
+ * Processes current layer by taking input to it and a flag whether it's the last layer in a model
 */
 void Model::Layer::process (double* input, bool is_output) {
     for (int i = 0; i < neuron_count; i ++) {
@@ -34,9 +33,10 @@ void Model::Layer::process (double* input, bool is_output) {
     }
 }
 
-
-// The constuctor
-// Takes an input size as a parameter
+/**
+ * Model constructor
+ * Takes a number of layers and a size of an input array as parameters
+ */
 Model::Model (int layers_count, int input_size) {
     this -> layer_count = layers_count;
     this -> current_layer_count = 0;
@@ -44,9 +44,10 @@ Model::Model (int layers_count, int input_size) {
     this -> input_size = input_size;
 }
 
-
-// Add a new layer to the model
-// Takes number of neurons in this layers along with their weights and biases
+/**
+ * Add a new layer to the model
+ * Takes number of neurons in this layers along with their weights and biases
+ */
 void Model::add_layer (int neuron_count, double* weights, double* biases) {
     layers [current_layer_count] = {
         neuron_count,
@@ -59,8 +60,10 @@ void Model::add_layer (int neuron_count, double* weights, double* biases) {
 }
 
 
-// Forward pass
-// Takes input array as a parameter and returns an index of a most similar letter
+/**
+ * Forward pass
+ * Takes input array as a parameter and returns an index of a most similar letter
+*/
 int Model::forward_pass (double* input) {
     // Process input -> first layer
     layers [0].process (input, false);
@@ -88,8 +91,10 @@ int Model::forward_pass (double* input) {
 }
 
 
-// The destructor
-// Frees used memory, namely all neurons' weights and biases
+/**
+ * Model destructor
+ * Frees used memory, namely all layers and their neurons' weights and biases
+ */
 Model::~Model () {
     for (int i = 0; i < layer_count; i ++) {
         delete[] layers [i].weights;
