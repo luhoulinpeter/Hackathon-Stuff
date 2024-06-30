@@ -96,4 +96,5 @@ Model::~Model () {
         delete[] layers [i].biases;
         delete[] layers [i].outputs;
     }
+    delete[] layers;
 }
