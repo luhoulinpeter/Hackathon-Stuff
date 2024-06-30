@@ -23,18 +23,18 @@ using namespace std;
 /**
  * Model initialisation
 */
-void init_model (Model& model) {
+void init_model () {
     // Read weights and biases
     Parameters* parameters = read_parameters ("weights_and_biases.txt");
 
     // Initialize model
-    model.add_layer (98, parameters -> weightsL1, parameters -> biasesL1);
-    model.add_layer (65, parameters -> weightsL2, parameters -> biasesL2);
-    model.add_layer (50, parameters -> weightsL3, parameters -> biasesL3);
-    model.add_layer (30, parameters -> weightsL4, parameters -> biasesL4);
-    model.add_layer (25, parameters -> weightsL5, parameters -> biasesL5);
-    model.add_layer (40, parameters -> weightsL6, parameters -> biasesL6);
-    model.add_layer (52, parameters -> weightsL7, parameters -> biasesL7);
+    Model::add_layer (98, parameters -> weightsL1, parameters -> biasesL1);
+    Model::add_layer (65, parameters -> weightsL2, parameters -> biasesL2);
+    Model::add_layer (50, parameters -> weightsL3, parameters -> biasesL3);
+    Model::add_layer (30, parameters -> weightsL4, parameters -> biasesL4);
+    Model::add_layer (25, parameters -> weightsL5, parameters -> biasesL5);
+    Model::add_layer (40, parameters -> weightsL6, parameters -> biasesL6);
+    Model::add_layer (52, parameters -> weightsL7, parameters -> biasesL7);
 
     delete parameters;
 }
@@ -63,7 +63,9 @@ void process_directory (Model& model, int repeats = 1) {
         for (auto& entry : filesystem::directory_iterator (tensors_path)) {
             // Reading data and processing
             string path = entry.path ().string ();
-            int res = model.forward_pass (read_input (path));
+            int* out = model.forward_pass (read_input (path));
+            int res = out [0];
+            delete[] out;
 
             // Converting and saving the result
             char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
@@ -92,23 +94,25 @@ void process_directory (Model& model, int repeats = 1) {
 
 
 // Optimisations to try
-// Math:    multiple inputs, simpler exp
+// Math:    multiple inputs (done, needs testing), faster exp
 // Mp:      multiprocessing vs threading
 
 /**
- * Single-Thread execution of Model Inference
+ * The main function
 */
 int main (int argc, char* argv []) {
     ios_base::sync_with_stdio (false);
 
     // Initialize model
     auto NOW;
-    Model model (LAYERS, INPUT);
-    init_model (model);
+    Model::init ();
+    init_model ();
     cout << "Model initialized in " << ELAPSED << " milliseconds" << endl;
 
     // Process directory (avg)
+    Model model (1);
     process_directory (model, argc > 1 ? atoi (argv [1]) : 1);
     
+    Model::free ();
     return 0;
 }

@@ -1,4 +1,5 @@
 #include "reader.h"
+#include "params.h"
 #include <fstream>
 #include <sstream>
 

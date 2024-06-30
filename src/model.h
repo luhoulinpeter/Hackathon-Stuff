@@ -12,39 +12,45 @@ private:
         int neuron_count, input_count;
         double* weights;
         double* biases;
-        double* outputs;
-
-        // Process current layer in forward propagation
-        void process (double* input);
-
-        // Activates layer output using ReLU
-        void relu ();
-
-        // Activates layer output using softmax
-        void softmax ();
-
-        // Activates layer output
-        // void activate (bool is_output);
     };
 
     // Model's layers and their count
-    int layer_count, current_layer_count;
-    Layer* layers;
+    static Layer* layers;
+    static int current_layer_count;
 
-    // Size of an input array
-    int input_size;
+    // Model data
+    int batch_size;
+    double** data;
+
+    // Process the given layer in forward propagation
+    void process (int layer, double* input);
+
+    // Activate the given layer output using ReLU
+    void relu (int layer);
+
+    // Activate the last layer output using
+    void softmax ();
+
+    // Return an output index array
+    int* select ();
 
 
 public:
 
-    // The constuctor
-    Model (int layers_count, int input_size);
+    // Model initialization
+    static void init ();
 
     // Add a new layer to the model
-    void add_layer (int neuron_count, double* weights, double* biases);
+    static void add_layer (int neuron_count, double* weights, double* biases);
+
+    // Model uninitialization
+    static void free ();
+
+    // The constuctor
+    Model (int batch_size);
 
     // Forward pass
-    int forward_pass (double* input);
+    int* forward_pass (double* input);
 
     // The destructor
     ~Model ();
