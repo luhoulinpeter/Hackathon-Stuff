@@ -98,7 +98,7 @@ void process_directory (Model& model, int repeats = 1) {
 /**
  * Single-Thread execution of Model Inference
 */
-int main () {
+int main (int argc, char* argv []) {
     ios_base::sync_with_stdio (false);
 
     // Initialize model
@@ -108,7 +108,7 @@ int main () {
     cout << "Model initialized in " << ELAPSED << " milliseconds" << endl;
 
     // Process directory (avg)
-    process_directory (model, 1);
+    process_directory (model, argc > 1 ? atoi (argv [1]) : 1);
     
     return 0;
 }

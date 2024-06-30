@@ -15,7 +15,16 @@ private:
         double* outputs;
 
         // Process current layer in forward propagation
-        void process (double* input, bool is_output);
+        void process (double* input);
+
+        // Activates layer output using ReLU
+        void relu ();
+
+        // Activates layer output using softmax
+        void softmax ();
+
+        // Activates layer output
+        // void activate (bool is_output);
     };
 
     // Model's layers and their count
