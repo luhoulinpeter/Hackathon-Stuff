@@ -14,7 +14,8 @@
 #include <filesystem>
 #include <chrono>
 
-#define elapsed chrono::duration_cast <chrono::microseconds> (chrono::high_resolution_clock::now () - start).count () / 1000.0
+#define NOW start = chrono::high_resolution_clock::now ()
+#define ELAPSED chrono::duration_cast <chrono::microseconds> (chrono::high_resolution_clock::now () - start).count () / 1000.0
 
 using namespace std;
 
@@ -55,7 +56,7 @@ void process_directory (Model& model, int repeats = 1) {
     // Profiling
     long double avg = 0;
     for (int i = 0; i < repeats; i ++) {
-        auto start = chrono::system_clock::now ();
+        auto NOW;
 
         // Processing every file in directory
         cnt = 1;
@@ -70,27 +71,29 @@ void process_directory (Model& model, int repeats = 1) {
             cnt ++;
         }
         
-        avg += elapsed;
-        if (i % 100 == 0) { cout << "Completed " << i << " repeats" << endl; }
+        avg += ELAPSED;
+        if (i % 100 == 1) { cout << "Completed " << i << " repeats" << endl; }
     }
     cout << "Average directory processing time: " << avg / repeats << " milliseconds" << endl;
 
     // Writing results to csv
     ofstream fout ("results.csv");
+    fout.tie ();
     fout << "image number,label" << '\n';
     for (int i = 1; i < cnt; i ++) {
         fout << i << ',' << aux [i] << '\n';
         //cout << aux [i] << ' ';
     }
     //cout << endl;
+    fout.flush ();
     fout.close ();
     delete[] aux;
 }
 
 
 // Optimisations to try
-// IO:      ios_base::sync_with_stdio, .tie, .flush
-// Stings:  reconsider getline
+// IO:      ios_base::sync_with_stdio, .tie, .flush     - Done, +
+// Stings:  reconsider getline                          - On hold
 // Math:    multiple inputs, simpler exp
 // General: malloc vs new, multiprocessing
 
@@ -98,15 +101,19 @@ void process_directory (Model& model, int repeats = 1) {
  * Single-Thread execution of Model Inference
 */
 int main () {
+    ios_base::sync_with_stdio (false);
 
     // Initialize model
-    auto start = chrono::high_resolution_clock::now ();
+    auto NOW;
     Model model (7, 225);
     init_model (model);
-    cout << "Model initialized in " << elapsed << " milliseconds" << endl;
+    cout << "Model initialized in " << ELAPSED << " milliseconds" << endl;
 
     // Process directory (avg)
     process_directory (model, 500);
+    // NOW;
+    // process_directory (model);
+    // cout << "Done in " << ELAPSED << " milliseconds" << endl;
     
     return 0;
 }
