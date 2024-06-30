@@ -14,7 +14,7 @@
 #include <filesystem>
 #include <chrono>
 
-#define elapsed chrono::duration_cast <chrono::microseconds> (chrono::system_clock::now () - start).count () / 1000.0
+#define elapsed chrono::duration_cast <chrono::microseconds> (chrono::high_resolution_clock::now () - start).count () / 1000.0
 
 using namespace std;
 
@@ -100,7 +100,7 @@ void process_directory (Model& model, int repeats = 1) {
 int main () {
 
     // Initialize model
-    auto start = chrono::system_clock::now ();
+    auto start = chrono::high_resolution_clock::now ();
     Model model (7, 225);
     init_model (model);
     cout << "Model initialized in " << elapsed << " milliseconds" << endl;
