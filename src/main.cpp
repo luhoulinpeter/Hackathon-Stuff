@@ -13,6 +13,8 @@
 #include <sstream>
 #include <filesystem>
 #include <chrono>
+#include <omp.h>
+#include <vector>
 
 #define NOW start = chrono::high_resolution_clock::now ()
 #define ELAPSED chrono::duration_cast <chrono::microseconds> (chrono::high_resolution_clock::now () - start).count () / 1000.0
@@ -40,13 +42,30 @@ void init_model () {
 }
 
 
+// Function to collect all file paths in the directory
+vector<string> collect_file_paths(const string& directory) {
+    vector<string> file_paths;
+    for (const auto& entry : filesystem::directory_iterator(directory)) {
+        file_paths.push_back(entry.path().string());
+    }
+    return file_paths;
+}
+
+
 /**
  * Process all tensors in /tensors directory
 */
 void process_directory (Model& model, int repeats = 1) {
     // Dark magic
     string tensors_path = filesystem::current_path ().string () + "/tensors";
-    string path = (*filesystem::directory_iterator (tensors_path)).path ().string ();
+    vector<string> file_paths = collect_file_paths(tensors_path);
+    if (file_paths.empty()) {
+        cerr << "No files found in the tensors directory." << endl;
+        return;
+    }
+    // string path = (*filesystem::directory_iterator (tensors_path)).path ().string ();
+    string path = file_paths[0];
+
     int digits = path.size () - 8 - tensors_path.size ();
     int size = 1;
     for (int i = 0; i < digits; i ++, size *= 10);
@@ -59,10 +78,14 @@ void process_directory (Model& model, int repeats = 1) {
         auto NOW;
 
         // Processing every file in directory
-        cnt = 1;
-        for (auto& entry : filesystem::directory_iterator (tensors_path)) {
+        cnt=1;
+    
+        #pragma omp parallel for
+        // for (auto& entry : filesystem::directory_iterator (tensors_path)) {
+        for (size_t j = 0; j < file_paths.size(); j++) {
             // Reading data and processing
-            string path = entry.path ().string ();
+            // string path = entry.path ().string ();
+            string path = file_paths[j];
             int* out = model.forward_pass (read_input (path));
             int res = out [0];
             delete[] out;
