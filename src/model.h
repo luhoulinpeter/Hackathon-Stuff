@@ -21,18 +21,16 @@ private:
     // Model data
     int batch_size;
     double** data;
+    int* outputs;
 
     // Process the given layer in forward propagation
-    void process (int layer, double* input);
+    void process (int layer);
 
     // Activate the given layer output using ReLU
     void relu (int layer);
 
     // Activate the last layer output using
     void softmax ();
-
-    // Return an output index array
-    int* select ();
 
 
 public:
@@ -49,8 +47,14 @@ public:
     // The constuctor
     Model (int batch_size);
 
+    // Get inputs
+    double* get_inputs ();
+
+    // Forward pass with limited batch size
+    int* sub_forward_pass (int sub_batch);
+
     // Forward pass
-    int* forward_pass (double* input);
+    int* forward_pass ();
 
     // The destructor
     ~Model ();

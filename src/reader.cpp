@@ -1,5 +1,6 @@
 #include "reader.h"
 #include "params.h"
+#include "model.h"
 #include <fstream>
 #include <sstream>
 
@@ -45,17 +46,14 @@ void parse_line (const string& line, double* values) {
 
 /**
  * Read values from file to an array
- * Takes a filename to read an input from and returns an array of values
+ * Takes a filename to read an input from and an input array
  */
-double* read_input (const string& filename) {
+ void read_input (const string& filename, double* input) {
     ifstream file (filename);
     string line;
     getline (file, line);
     file.close ();
-
-    double* arr = new double [INPUT];
-    parse_line (line, arr);
-    return arr;
+    parse_line (line, input);
 }
 
 
@@ -113,4 +111,24 @@ Parameters* read_parameters (const string& filename) {
 
     file.close ();
     return parameters;
+}
+
+
+/**
+ * Model initialisation
+*/
+void init_model () {
+    // Read weights and biases
+    Parameters* parameters = read_parameters ("weights_and_biases.txt");
+
+    // Initialize model
+    Model::add_layer (98, parameters -> weightsL1, parameters -> biasesL1);
+    Model::add_layer (65, parameters -> weightsL2, parameters -> biasesL2);
+    Model::add_layer (50, parameters -> weightsL3, parameters -> biasesL3);
+    Model::add_layer (30, parameters -> weightsL4, parameters -> biasesL4);
+    Model::add_layer (25, parameters -> weightsL5, parameters -> biasesL5);
+    Model::add_layer (40, parameters -> weightsL6, parameters -> biasesL6);
+    Model::add_layer (52, parameters -> weightsL7, parameters -> biasesL7);
+
+    delete parameters;
 }

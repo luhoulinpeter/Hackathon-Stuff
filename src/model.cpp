@@ -46,10 +46,11 @@ void Model::free () {
  * Layer processing
  * Processes the given layer by taking an input to it
 */
-void Model::process (int layer, double* input) {
-    // Locate current layer and its outputs
+void Model::process (int layer) {
+    // Locate current layer, its inputs and outputs
     Layer& c_layer = layers [layer];
-    double* c_data = data [layer];
+    double* input = data [layer];
+    double* c_data = data [layer + 1];
     
     // For each neurone in this layer from each batch
     for (int u = 0; u < batch_size; u ++) {
@@ -71,9 +72,10 @@ void Model::process (int layer, double* input) {
  * Activate the given layer using ReLU
  */
 void Model::relu (int layer) {
+    double* c_data = data [layer + 1];
     int total = layers [layer].neuron_count * batch_size;
     for (int i = 0; i < total; i ++) {
-        data [layer] [i] *= (data [layer] [i] > 0);
+        c_data [i] *= (c_data [i] > 0);
     }
 }
 
@@ -83,49 +85,28 @@ void Model::relu (int layer) {
  */
 void Model::softmax () {
     // Locate the last layer and its outputs
-    Layer& c_layer = layers [LAYERS - 1];
-    double* c_data = data [LAYERS - 1];
+    int categories = layers [LAYERS - 1].neuron_count;
+    double* c_data = data [LAYERS];
 
     // For each output in last layer from each batch
     for (int u = 0; u < batch_size; u ++) {
         double exp_sum = 0;
 
         // Calculate exp sum
-        for (int i = 0; i < c_layer.neuron_count; i ++) {
-            exp_sum += exp (c_data [u * c_layer.neuron_count + i]);
+        for (int i = 0; i < categories; i ++) {
+            exp_sum += exp (c_data [u * categories + i]);
         }
 
-        // Divide exp of each output by the sum
-        for (int i = 0; i < c_layer.neuron_count; i ++) {
-            c_data [i] = exp (c_data [u * c_layer.neuron_count + i]) / exp_sum;
-        }
-    }
-
-}
-
-
-/**
- * Return an output arrray of indexes
- */
-int* Model::select () {
-    // Locate the last layer and its outputs
-    Layer& c_layer = layers [LAYERS - 1];
-    double* c_data = data [LAYERS - 1];
-
-    // For each output in last layer from each batch
-    int* outputs = new int [batch_size];
-    for (int u = 0; u < batch_size; u ++) {
+        // Calculate output
         double max = 0;
-
-        // Find the largest value and its index
-        for (int i = 0; i < c_layer.neuron_count; i ++) {
+        for (int i = 0; i < categories; i ++) {
+            c_data [i] = exp (c_data [u * categories + i]) / exp_sum;
             if (c_data [i] > max) {
                 max = c_data [i];
                 outputs [u] = i;
             }
         }
     }
-    return outputs;
 }
 
 
@@ -135,10 +116,36 @@ int* Model::select () {
  */
 Model::Model (int batch_size) {
     this -> batch_size = batch_size;
-    data = new double* [LAYERS];
-    for (int i = 0; i < LAYERS; i ++) {
-        data [i] = new double [layers [i].neuron_count * batch_size];
+    data = new double* [LAYERS + 1];
+    data [0] = new double [INPUT * batch_size];
+    for (int i = 1; i <= LAYERS; i ++) {
+        data [i] = new double [layers [i - 1].neuron_count * batch_size];
     }
+    outputs = new int [batch_size];
+}
+
+
+/**
+ * Get inputs
+ */
+double* Model::get_inputs () {
+    return data [0];
+}
+
+
+/**
+ * Forward pass with limited batch size
+ */
+int* Model::sub_forward_pass (int sub_batch) {
+    int original_batch = batch_size;
+    if (sub_batch > 0 && sub_batch < batch_size) {
+        batch_size = sub_batch;
+    }
+
+    forward_pass ();
+    
+    batch_size = original_batch;
+    return outputs;
 }
 
 
@@ -146,22 +153,18 @@ Model::Model (int batch_size) {
  * Forward pass
  * Takes input array as a parameter and returns an array of indexes of the most similar letters
 */
-int* Model::forward_pass (double* input) {
-    // Process input to first layer
-    process (0, input);
-    delete[] input;
-
+int* Model::forward_pass () {
     // Activate layer K-1, then process it to layer K
-    for (int i = 1; i < LAYERS; i ++) {
-        relu (i - 1);
-        process (i, data [i - 1]);
+    for (int i = 0; i < LAYERS - 1; i ++) {
+        process (i);
+        relu (i);
     }
 
-    // Actvate last layer
+    // Process and activate the last layer and get outputs
+    process (LAYERS - 1);
     softmax ();
 
-    // Return outputs
-    return select ();
+    return outputs;
 }
 
 
@@ -170,7 +173,8 @@ int* Model::forward_pass (double* input) {
  * Frees all model outputs and data
  */
 Model::~Model () {
-    for (int i = 0; i < LAYERS; i ++) {
+    delete[] outputs;
+    for (int i = 0; i <= LAYERS; i ++) {
         delete[] data [i];
     }
     delete[] data;

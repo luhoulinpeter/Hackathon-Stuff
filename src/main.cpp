@@ -8,6 +8,7 @@
 
 #include "reader.h"
 #include "model.h"
+#include "params.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -21,60 +22,61 @@ using namespace std;
 
 
 /**
- * Model initialisation
-*/
-void init_model () {
-    // Read weights and biases
-    Parameters* parameters = read_parameters ("weights_and_biases.txt");
-
-    // Initialize model
-    Model::add_layer (98, parameters -> weightsL1, parameters -> biasesL1);
-    Model::add_layer (65, parameters -> weightsL2, parameters -> biasesL2);
-    Model::add_layer (50, parameters -> weightsL3, parameters -> biasesL3);
-    Model::add_layer (30, parameters -> weightsL4, parameters -> biasesL4);
-    Model::add_layer (25, parameters -> weightsL5, parameters -> biasesL5);
-    Model::add_layer (40, parameters -> weightsL6, parameters -> biasesL6);
-    Model::add_layer (52, parameters -> weightsL7, parameters -> biasesL7);
-
-    delete parameters;
-}
-
-
-/**
  * Process all tensors in /tensors directory
 */
-void process_directory (Model& model, int repeats = 1) {
-    // Dark magic
+void process_directory (int repeats = 1) {
     string tensors_path = filesystem::current_path ().string () + "/tensors";
-    string path = (*filesystem::directory_iterator (tensors_path)).path ().string ();
-    int digits = path.size () - 8 - tensors_path.size ();
-    int size = 1;
-    for (int i = 0; i < digits; i ++, size *= 10);
-    char* aux = new char [size];
-    int cnt;
+
+    // Get number of files in directory
+    // string tpath = (*filesystem::directory_iterator (tensors_path)).path ().string ();
+    // int digits = tpath.size () - 8 - tensors_path.size ();
+    // int size = 1; for (int i = 0; i < digits; i ++, size *= 10);
+    auto it = filesystem::directory_iterator (tensors_path);
+    int size = distance (it, {});
+    int digits = 0; for (int i = size; i > 0; i /= 10, digits ++);
+    char* aux = new char [size + 1];
+
+    int batch = 10;
+    Model model (batch);
 
     // Profiling
     long double avg = 0;
-    for (int i = 0; i < repeats; i ++) {
+    for (int r = 0; r < repeats; r ++) {
         auto NOW;
-
-        // Processing every file in directory
-        cnt = 1;
+        
+        /*/ Processing every file in directory
         for (auto& entry : filesystem::directory_iterator (tensors_path)) {
             // Reading data and processing
             string path = entry.path ().string ();
-            int* out = model.forward_pass (read_input (path));
+            read_input (path, model.get_inputs ());
+            int* out = model.forward_pass ();
             int res = out [0];
-            delete[] out;
 
             // Converting and saving the result
             char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
             aux [stoi (path.substr (tensors_path.size () + 1, digits))] = letter;
-            cnt ++;
+        }*/
+
+        int mapping [batch];
+        auto it = filesystem::directory_iterator (tensors_path);
+        for (int i = 0; i < size; it ++) {
+            string path = (*it).path ().string ();
+            read_input (path, model.get_inputs () + i % batch * INPUT);
+            mapping [i % batch] = stoi (path.substr (tensors_path.size () + 1, digits));
+            i ++;
+
+            if (i % batch == 0 || i == size) {
+                int s = i % batch == 0 ? batch : i % batch;
+                int* out = model.sub_forward_pass (s);
+                for (int u = 0; u < s; u ++) {
+                    int res = out [u];
+                    aux [mapping [u]] = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
+                }
+            }
         }
         
         avg += ELAPSED;
-        if (i % 100 == 1) { cout << "Completed " << i << " repeats" << endl; }
+        if (r % 100 == 1) { cout << "Completed " << r << " repeats" << endl; }
     }
     cout << "Average directory processing time: " << avg / repeats << " milliseconds" << endl;
 
@@ -82,11 +84,9 @@ void process_directory (Model& model, int repeats = 1) {
     ofstream fout ("results.csv");
     fout.tie ();
     fout << "image number,label" << '\n';
-    for (int i = 1; i < cnt; i ++) {
+    for (int i = 1; i < size; i ++) {
         fout << i << ',' << aux [i] << '\n';
-        //cout << aux [i] << ' ';
     }
-    //cout << endl;
     fout.flush ();
     fout.close ();
     delete[] aux;
@@ -110,8 +110,7 @@ int main (int argc, char* argv []) {
     cout << "Model initialized in " << ELAPSED << " milliseconds" << endl;
 
     // Process directory (avg)
-    Model model (1);
-    process_directory (model, argc > 1 ? atoi (argv [1]) : 1);
+    process_directory (argc > 1 ? atoi (argv [1]) : 1);
     
     Model::free ();
     return 0;

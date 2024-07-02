@@ -25,9 +25,9 @@ struct Parameters {
 };
 
 // Read values from file to an array
-double* read_input (const std::string& filename);
+void read_input (const std::string& filename, double* input);
 
-// Reads weights from file to parameters
-Parameters* read_parameters (const std::string& filename);
+// Initialize Model
+void init_model ();
 
 #endif 
