@@ -45,9 +45,26 @@ void init_model () {
 // Function to collect all file paths in the directory
 vector<string> collect_file_paths(const string& directory) {
     vector<string> file_paths;
-    for (const auto& entry : filesystem::directory_iterator(directory)) {
-        file_paths.push_back(entry.path().string());
+    vector<string> temp_paths;                  // Test if .push_back() directly to file_paths is fine, will improve performance if possible
+
+    #pragma omp parallel
+    {
+        #pragma omp single nowait               // Check if any issues occur with process_dictionary() or files not in order
+        {
+            for (const auto& entry : filesystem::directory_iterator(directory)) {
+                #pragma omp task firstprivate(entry)
+                {
+                    string path = entry.path().string();
+                    #pragma omp critical
+                    temp_paths.push_back(path);
+                }
+            }
+        }
     }
+
+    // Combine the collected paths from different threads
+    file_paths.insert(file_paths.end(), temp_paths.begin(), temp_paths.end());
+
     return file_paths;
 }
 
