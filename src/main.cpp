@@ -14,26 +14,27 @@
 #include <filesystem>
 #include <chrono>
 
-#define elapsed chrono::duration_cast <chrono::microseconds> (chrono::system_clock::now () - start).count () / 1000.0
+#define NOW start = chrono::high_resolution_clock::now ()
+#define ELAPSED chrono::duration_cast <chrono::microseconds> (chrono::high_resolution_clock::now () - start).count () / 1000.0
 
 using namespace std;
 
+
 /**
- * Model Initialisation
+ * Model initialisation
 */
-void init_model (Model& model) {
+void init_model () {
     // Read weights and biases
-    Parameters* parameters = new Parameters;
-    read_parameters ("weights_and_biases.txt", parameters);
+    Parameters* parameters = read_parameters ("weights_and_biases.txt");
 
     // Initialize model
-    model.add_layer (98, parameters->weightsL1, parameters->biasesL1);
-    model.add_layer (65, parameters->weightsL2, parameters->biasesL2);
-    model.add_layer (50, parameters->weightsL3, parameters->biasesL3);
-    model.add_layer (30, parameters->weightsL4, parameters->biasesL4);
-    model.add_layer (25, parameters->weightsL5, parameters->biasesL5);
-    model.add_layer (40, parameters->weightsL6, parameters->biasesL6);
-    model.add_layer (52, parameters->weightsL7, parameters->biasesL7);
+    Model::add_layer (98, parameters -> weightsL1, parameters -> biasesL1);
+    Model::add_layer (65, parameters -> weightsL2, parameters -> biasesL2);
+    Model::add_layer (50, parameters -> weightsL3, parameters -> biasesL3);
+    Model::add_layer (30, parameters -> weightsL4, parameters -> biasesL4);
+    Model::add_layer (25, parameters -> weightsL5, parameters -> biasesL5);
+    Model::add_layer (40, parameters -> weightsL6, parameters -> biasesL6);
+    Model::add_layer (52, parameters -> weightsL7, parameters -> biasesL7);
 
     delete parameters;
 }
@@ -55,14 +56,16 @@ void process_directory (Model& model, int repeats = 1) {
     // Profiling
     long double avg = 0;
     for (int i = 0; i < repeats; i ++) {
-        auto start = chrono::system_clock::now ();
+        auto NOW;
 
         // Processing every file in directory
         cnt = 1;
         for (auto& entry : filesystem::directory_iterator (tensors_path)) {
             // Reading data and processing
             string path = entry.path ().string ();
-            int res = model.forward_pass (read_input (path));
+            int* out = model.forward_pass (read_input (path));
+            int res = out [0];
+            delete[] out;
 
             // Converting and saving the result
             char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
@@ -70,43 +73,46 @@ void process_directory (Model& model, int repeats = 1) {
             cnt ++;
         }
         
-        avg += elapsed;
-        if (i % 100 == 0) { cout << "Completed " << i << " repeats" << endl; }
+        avg += ELAPSED;
+        if (i % 100 == 1) { cout << "Completed " << i << " repeats" << endl; }
     }
     cout << "Average directory processing time: " << avg / repeats << " milliseconds" << endl;
 
     // Writing results to csv
     ofstream fout ("results.csv");
+    fout.tie ();
     fout << "image number,label" << '\n';
     for (int i = 1; i < cnt; i ++) {
         fout << i << ',' << aux [i] << '\n';
         //cout << aux [i] << ' ';
     }
     //cout << endl;
+    fout.flush ();
     fout.close ();
     delete[] aux;
 }
 
 
 // Optimisations to try
-// IO:      ios_base::sync_with_stdio, .tie, .flush
-// Stings:  reconsider getline
-// Math:    multiple inputs, simpler exp
-// General: malloc vs new, multiprocessing
+// Math:    multiple inputs (done, needs testing), faster exp
+// Mp:      multiprocessing vs threading
 
 /**
- * Single-Thread execution of Model Inference
+ * The main function
 */
-int main () {
+int main (int argc, char* argv []) {
+    ios_base::sync_with_stdio (false);
 
     // Initialize model
-    auto start = chrono::system_clock::now ();
-    Model model (7, 225);
-    init_model (model);
-    cout << "Model initialized in " << elapsed << " milliseconds" << endl;
+    auto NOW;
+    Model::init ();
+    init_model ();
+    cout << "Model initialized in " << ELAPSED << " milliseconds" << endl;
 
     // Process directory (avg)
-    process_directory (model, 500);
+    Model model (1);
+    process_directory (model, argc > 1 ? atoi (argv [1]) : 1);
     
+    Model::free ();
     return 0;
 }

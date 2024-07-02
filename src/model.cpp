@@ -1,99 +1,177 @@
 #include "model.h"
+#include "params.h"
 #include <cmath>
+
+Model::Layer* Model::layers;
+int Model::current_layer_count;
 
 
 /**
- * Process current layer in forward propagation
- * Takes input to it and a flag whether it's the last layer in a model
-*/
-void Model::Layer::process (double* input, bool is_output) {
-    for (int i = 0; i < neuron_count; i ++) {
-        outputs [i] = 0;
-        for (int j = 0; j < input_count; j ++) {
-            outputs [i] += input [j] * weights [i*input_count + j];
-        }
-        outputs [i] += biases [i];
-    }
-
-    // Activate outputs
-    if (is_output) {
-        // Softmax
-        double exp_sum = 0;
-        for (int i = 0; i < neuron_count; i ++) {
-            exp_sum += exp (outputs [i]);
-        }
-        for (int i = 0; i < neuron_count; i ++) {
-            outputs [i] = exp (outputs [i]) / exp_sum;
-        }
-    }
-    else {
-        // ReLU
-        for (int i = 0; i < neuron_count; i ++) {
-            outputs [i] *= (outputs[i] > 0);
-        }
-    }
+ * Initialize the general model
+ */
+void Model::init () {
+    layers = new Layer [LAYERS];
+    current_layer_count = 0;
 }
 
 
-// The constuctor
-// Takes an input size as a parameter
-Model::Model (int layers_count, int input_size) {
-    this -> layer_count = layers_count;
-    this -> current_layer_count = 0;
-    this -> layers = new Layer [layers_count];
-    this -> input_size = input_size;
-}
-
-
-// Add a new layer to the model
-// Takes number of neurons in this layers along with their weights and biases
+/**
+ * Add a new layer to the model
+ * Takes number of neurons in this layers along with their weights and biases
+ */
 void Model::add_layer (int neuron_count, double* weights, double* biases) {
     layers [current_layer_count] = {
         neuron_count,
-        current_layer_count > 0 ? layers [current_layer_count - 1].neuron_count : input_size,
+        current_layer_count > 0 ? layers [current_layer_count - 1].neuron_count : INPUT,
         weights,
-        biases,
-        new double [neuron_count]
+        biases
     };
     current_layer_count ++;
 }
 
 
-// Forward pass
-// Takes input array as a parameter and returns an index of a most similar letter
-int Model::forward_pass (double* input) {
-    // Process input -> first layer
-    layers [0].process (input, false);
-    delete[] input;
-
-    // Process layer K -> layer K + 1
-    for (int i = 1; i < layer_count - 1; i ++) {
-        layers [i].process (layers [i - 1].outputs, false);
+/**
+ * Free memory taken by the general model
+ */
+void Model::free () {
+    for (int i = 0; i < LAYERS; i ++) {
+        delete[] layers [i].weights;
+        delete[] layers [i].biases;
     }
-
-    // Process pre-last layer -> last layer
-    Layer& last_layer = layers [layer_count - 1];
-    last_layer.process (layers [layer_count - 2].outputs, true);
-
-    // Find maximum output and its position
-    int pos = 0;
-    double max = 0;
-    for (int i = 0; i < last_layer.neuron_count; i ++) {
-        if (last_layer.outputs [i] > max) {
-            max = last_layer.outputs [i];
-            pos = i;
-        }
-    }
-    return pos;
+    delete[] layers;
 }
 
 
-// The destructor
-// Frees used memory, namely all neurons' weights and biases
-Model::~Model () {
-    for (int i = 0; i < layer_count; i ++) {
-        delete[] layers [i].weights;
-        delete[] layers [i].biases;
-        delete[] layers [i].outputs;
+/**
+ * Layer processing
+ * Processes the given layer by taking an input to it
+*/
+void Model::process (int layer, double* input) {
+    // Locate current layer and its outputs
+    Layer& c_layer = layers [layer];
+    double* c_data = data [layer];
+    
+    // For each neurone in this layer from each batch
+    for (int u = 0; u < batch_size; u ++) {
+        for (int i = 0; i < c_layer.neuron_count; i ++) {
+            double& c_out = c_data [u * c_layer.neuron_count + i];
+
+            // Compute the output for current neurone
+            c_out = 0;
+            for (int j = 0; j < c_layer.input_count; j ++) {
+                c_out += input [u * c_layer.input_count + j] * c_layer.weights [i * c_layer.input_count + j];
+            }
+            c_out += c_layer.biases [i];
+        }
     }
+}
+
+
+/**
+ * Activate the given layer using ReLU
+ */
+void Model::relu (int layer) {
+    int total = layers [layer].neuron_count * batch_size;
+    for (int i = 0; i < total; i ++) {
+        data [layer] [i] *= (data [layer] [i] > 0);
+    }
+}
+
+
+/**
+ * Activate the last layer using softmax
+ */
+void Model::softmax () {
+    // Locate the last layer and its outputs
+    Layer& c_layer = layers [LAYERS - 1];
+    double* c_data = data [LAYERS - 1];
+
+    // For each output in last layer from each batch
+    for (int u = 0; u < batch_size; u ++) {
+        double exp_sum = 0;
+
+        // Calculate exp sum
+        for (int i = 0; i < c_layer.neuron_count; i ++) {
+            exp_sum += exp (c_data [u * c_layer.neuron_count + i]);
+        }
+
+        // Divide exp of each output by the sum
+        for (int i = 0; i < c_layer.neuron_count; i ++) {
+            c_data [i] = exp (c_data [u * c_layer.neuron_count + i]) / exp_sum;
+        }
+    }
+
+}
+
+
+/**
+ * Return an output arrray of indexes
+ */
+int* Model::select () {
+    // Locate the last layer and its outputs
+    Layer& c_layer = layers [LAYERS - 1];
+    double* c_data = data [LAYERS - 1];
+
+    // For each output in last layer from each batch
+    int* outputs = new int [batch_size];
+    for (int u = 0; u < batch_size; u ++) {
+        double max = 0;
+
+        // Find the largest value and its index
+        for (int i = 0; i < c_layer.neuron_count; i ++) {
+            if (c_data [i] > max) {
+                max = c_data [i];
+                outputs [u] = i;
+            }
+        }
+    }
+    return outputs;
+}
+
+
+/**
+ * Model constructor
+ * Takes a batch size as a parameter
+ */
+Model::Model (int batch_size) {
+    this -> batch_size = batch_size;
+    data = new double* [LAYERS];
+    for (int i = 0; i < LAYERS; i ++) {
+        data [i] = new double [layers [i].neuron_count * batch_size];
+    }
+}
+
+
+/**
+ * Forward pass
+ * Takes input array as a parameter and returns an array of indexes of the most similar letters
+*/
+int* Model::forward_pass (double* input) {
+    // Process input to first layer
+    process (0, input);
+    delete[] input;
+
+    // Activate layer K-1, then process it to layer K
+    for (int i = 1; i < LAYERS; i ++) {
+        relu (i - 1);
+        process (i, data [i - 1]);
+    }
+
+    // Actvate last layer
+    softmax ();
+
+    // Return outputs
+    return select ();
+}
+
+
+/**
+ * Model destructor
+ * Frees all model outputs and data
+ */
+Model::~Model () {
+    for (int i = 0; i < LAYERS; i ++) {
+        delete[] data [i];
+    }
+    delete[] data;
 }
