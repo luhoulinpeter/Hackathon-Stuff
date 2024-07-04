@@ -3,7 +3,6 @@
 #include "reader.h"
 #include <cmath>
 #include <thread>
-#include <mutex>
 
 Model::Layer* Model::layers;
 int Model::current_layer_count;
@@ -151,14 +150,14 @@ void Model::process_input (const std::string& filename, int pos, std::atomic_int
     (*free_readers) --;
 }
 
-
+#include <iostream>
 /**
  * Forward pass
  * Takes an auxiliary array to store results in,
  * a queue of models to make itself available again,
  * and a sub-batch parameter (optional)
 */
-void Model::forward_pass (char* aux, std::queue <Model*>* models, int sub_batch) {
+void Model::forward_pass (char* aux, std::queue <Model*>* models, std::atomic <Model*>* locked_by, int sub_batch) {
     // Save original batch size
     int original_batch = batch_size;
     if (sub_batch > 0 && sub_batch < batch_size) {
@@ -184,14 +183,18 @@ void Model::forward_pass (char* aux, std::queue <Model*>* models, int sub_batch)
         aux [mappings [i]] = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
     }
 
-    // Restore original batch size
+    // Restore original batch size, current input and ready count
     batch_size = original_batch;
+    current_input = 0;
+    ready = 0;
 
     // Make this model available again by adding it to the queue of available models
-    std::mutex mtx;
-    mtx.lock ();
+    std::cout << this << " completed the fp, queue size is " << models -> size () << std::endl;
+    while (*locked_by != nullptr) {}
+    *locked_by = this;
     models -> push (this);
-    mtx.unlock ();
+    std::cout << this << " added itself to the queue, queue size is " << models -> size () << std::endl;
+    *locked_by = nullptr;
 }
 
 

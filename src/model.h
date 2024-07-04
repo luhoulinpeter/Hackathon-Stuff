@@ -60,7 +60,7 @@ public:
     void process_input (const std::string& filename, int pos, std::atomic_int* free_readers);
 
     // Forward pass
-    void forward_pass (char* aux, std::queue <Model*>* models, int sub_batch);
+    void forward_pass (char* aux, std::queue <Model*>* models, std::atomic <Model*>* locked_by, int sub_batch);
 
     // The destructor
     ~Model ();

@@ -16,6 +16,7 @@
 #include <thread>
 #include <atomic>
 #include <queue>
+#include "tq.h"
 
 #define NOW start = chrono::high_resolution_clock::now ()
 #define ELAPSED chrono::duration_cast <chrono::microseconds> (chrono::high_resolution_clock::now () - start).count () / 1000.0
@@ -41,8 +42,8 @@ void process_directory (int repeats = 1) {
     for (unsigned long int i = 0; i < model_count; i ++) {
         free_models.push (new Model (batch));
     }
-
     atomic_int free_readers = 8;
+    atomic <Model*> locked_by;
 
     // Profiling
     long double avg = 0;
@@ -61,7 +62,7 @@ void process_directory (int repeats = 1) {
 
             if (current -> is_ready ()) {
                 free_models.pop ();
-                thread t (&Model::forward_pass, current, aux, &free_models, 0);
+                thread t (&Model::forward_pass, current, aux, &free_models, &locked_by, 0);
                 t.detach ();
                 last_launch = cnt + 1;
                 
@@ -77,13 +78,18 @@ void process_directory (int repeats = 1) {
             if (it == end (it)) {
                 if (last_launch != cnt) {
                     free_models.pop ();
-                    thread t (&Model::forward_pass, current, aux, &free_models, cnt - last_launch);
+                    thread t (&Model::forward_pass, current, aux, &free_models, &locked_by, cnt - last_launch);
                     t.detach ();
                 }
                 break;
             }
         }
-        while (free_models.size () != model_count) {}
+        
+        while (locked_by || free_models.size () != model_count) {
+            this_thread::sleep_for (chrono::milliseconds (10));
+            cout<<free_models.size()<<endl;
+        }
+        cout<<"Here"<<endl;
 
         avg += ELAPSED;
         if (r % 100 == 1) { cout << "Completed " << r << " repeats" << endl; }
@@ -102,6 +108,13 @@ void process_directory (int repeats = 1) {
     delete[] aux;
 }
 
+void addnprint (tq* q, void* data) {
+    q -> print_size ("Before");
+    q -> push (data);
+    q -> print_size ("Mid");
+    q -> pop ();
+    q -> print_size ("After");
+}
 
 // Optimisations to try
 // Math:    multiple inputs (done, needs testing), faster exp
@@ -112,6 +125,17 @@ void process_directory (int repeats = 1) {
 */
 int main (int argc, char* argv []) {
     ios_base::sync_with_stdio (false);
+
+    // tq q = tq ();
+    // vector <thread> threads;
+    // for (int i = 0; i < 10; i++) {
+    //     threads.push_back (thread (addnprint, &q, (void*) i));
+    // }
+    // for (auto& th : threads) {
+    //     th.join ();
+    // }
+    // return 1;
+
 
     // Initialize model
     auto NOW;
