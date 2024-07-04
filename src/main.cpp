@@ -15,10 +15,8 @@
 #include <filesystem>
 #include <thread>
 #include <atomic>
-#include <chrono>
 
-#define NOW start = chrono::high_resolution_clock::now ()
-#define ELAPSED chrono::duration_cast <chrono::microseconds> (chrono::high_resolution_clock::now () - start).count () / 1000.0
+#include "shortcuts.h"
 
 using namespace std;
 
@@ -35,44 +33,51 @@ void process_directory (int repeats = 1) {
     int size = 1; for (int i = 0; i < digits; i ++, size *= 10);
     char* aux = new char [size + 1];
 
-    int model_count = 4;
+    // Initialized parameters
+    int model_count = 8;
     tq free_models = tq ();
     int batch = 256;
     for (int i = 0; i < model_count; i ++) {
         free_models.push (new Model (batch));
     }
-    atomic_int free_readers = 4;
+    atomic_int free_readers = 8;
 
     // Profiling
     long double avg = 0;
     for (int r = 0; r < repeats; r ++) {
         auto NOW;
         
-        //int mapping [batch];
+        // Reset local values
         cnt = 0;
         int last_launch = 0;
         auto it = filesystem::directory_iterator (tensors_path);
+
+        // Process every file in folder
         while (true) {
             string path = (*it).path ().string ();
 
-            while (free_models.empty ()) {}
+            // Wait for a free model
+            while (free_models.empty ()) {IDLE}
             Model* current = (Model*) free_models.front ();
 
+            // If model input is fully assigned to readers, put it in a waiting mode and take the next one
             if (current -> is_ready ()) {
                 free_models.pop ();
                 thread t (&Model::forward_pass, current, aux, &free_models, 0);
                 t.detach ();
                 last_launch = cnt;
                 
-                while (free_models.empty ()) {}
+                while (free_models.empty ()) {IDLE}
                 current = (Model*) free_models.front ();
             }
 
-            while (free_readers == 0) {}
+            // Wait for a free reader, then assign in to the part of current model input
+            while (free_readers == 0) {IDLE}
             current -> process_input (path, stoi (path.substr (tensors_path.size () + 1, digits)), &free_readers);
 
             it ++; cnt ++;
             
+            // It was the file in folder, launch current model if hasn't done it yet
             if (it == end (it)) {
                 if (last_launch != cnt) {
                     free_models.pop ();
@@ -82,7 +87,9 @@ void process_directory (int repeats = 1) {
                 break;
             }
         }
-        while (free_models.size () != model_count) { this_thread::sleep_for (chrono::milliseconds (10)); }
+
+        // Wait for all models to finish processing
+        while (free_models.size () != model_count) {IDLE}
 
         avg += ELAPSED;
         if (r % 100 == 1) { cout << "Completed " << r << " repeats" << endl; }
@@ -102,12 +109,12 @@ void process_directory (int repeats = 1) {
     // Check correctness
     int correct = 0;
     for (int i = 1; i <= cnt; i ++) {
-        //res % 2 ? char (97 + res / 2) : char (65 + res / 2)
         int res = 1 + (aux [i] > 96 ? (aux [i] - 97) * 2 + 1 : (aux [i] - 65) * 2);
         if (res == (i - 1) % 52 + 1) { correct ++; }
     }
     cout << "Correct: " << correct << " out of " << cnt << endl;
 
+    // Free allocated resources
     delete[] aux;
 }
 

@@ -4,6 +4,12 @@
 #include <cmath>
 #include <thread>
 
+#include "shortcuts.h"
+
+
+/**
+ * Declare model static variables
+ */
 Model::Layer* Model::layers;
 int Model::current_layer_count;
 
@@ -165,7 +171,7 @@ void Model::forward_pass (char* aux, tq* models, int sub_batch) {
     }
 
     // Wait for all inputs to be read
-    while (ready != batch_size) {}
+    while (ready != batch_size) {IDLE}
 
     // Activate layer K-1, then process it to layer K
     for (int i = 0; i < LAYERS - 1; i ++) {
