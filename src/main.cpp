@@ -9,14 +9,13 @@
 #include "reader.h"
 #include "model.h"
 #include "params.h"
+#include "tq.h"
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-#include <chrono>
 #include <thread>
 #include <atomic>
-#include <queue>
-#include "tq.h"
+#include <chrono>
 
 #define NOW start = chrono::high_resolution_clock::now ()
 #define ELAPSED chrono::duration_cast <chrono::microseconds> (chrono::high_resolution_clock::now () - start).count () / 1000.0
@@ -28,7 +27,7 @@ using namespace std;
  * Process all tensors in /tensors directory
 */
 void process_directory (int repeats = 1) {
-    string tensors_path = filesystem::current_path ().string () + "/tensors_ext";
+    string tensors_path = filesystem::current_path ().string () + "/tensors_10k";
 
     // Get number of files in directory
     string tpath = (*filesystem::directory_iterator (tensors_path)).path ().string ();
@@ -91,14 +90,24 @@ void process_directory (int repeats = 1) {
     cout << "Average directory processing time: " << avg / repeats << " milliseconds" << endl;
 
     // Writing results to csv
-    ofstream fout ("results.csv");
-    fout.tie ();
-    fout << "image number,label" << '\n';
+    // ofstream fout ("results.csv");
+    // fout.tie ();
+    // fout << "image number,label" << '\n';
+    // for (int i = 1; i <= 55; i ++) {
+    //     fout << i << ',' << aux [i] << '\n';
+    // }
+    // fout.flush ();
+    // fout.close ();
+
+    // Check correctness
+    int correct = 0;
     for (int i = 1; i <= cnt; i ++) {
-        //fout << i << ',' << aux [i] << '\n';
+        //res % 2 ? char (97 + res / 2) : char (65 + res / 2)
+        int res = 1 + (aux [i] > 96 ? (aux [i] - 97) * 2 + 1 : (aux [i] - 65) * 2);
+        if (res == (i - 1) % 52 + 1) { correct ++; }
     }
-    fout.flush ();
-    fout.close ();
+    cout << "Correct: " << correct << " out of " << cnt << endl;
+
     delete[] aux;
 }
 

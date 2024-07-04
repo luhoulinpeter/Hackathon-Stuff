@@ -3,4 +3,5 @@ bin/
 build/
 .DS_Store
 perf/
-tensors_ext/
+tensors_10k/
+tensors_100k/

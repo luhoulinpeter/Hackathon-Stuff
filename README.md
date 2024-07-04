@@ -1,12 +1,5 @@
-# Hackathon-Stuff
-High Performance Computing Track
+# Hackathon!
 
-Outline:
-- Read config and weights
-- Read model
-- For each file:
-  - Read input
-  - **Forward pass**
-  - Get result
-  - Free resources
-- Free resources
+Use **make** to build the program
+
+Use `for i in $(seq 0 10019); do cp "$(printf "./tensors/%02iout.txt" "$((i % 52 + 1))")" "$(printf "./tensors_t/%05iout.txt" "$((i + 1))")"; done` to create a sub-sample and test on it
