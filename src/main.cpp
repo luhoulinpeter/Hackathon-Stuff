@@ -36,13 +36,13 @@ void process_directory (int repeats = 1) {
     int size = 1; for (int i = 0; i < digits; i ++, size *= 10);
     char* aux = new char [size + 1];
 
-    int model_count = 8;
+    int model_count = 4;
     tq free_models = tq ();
     int batch = 256;
     for (int i = 0; i < model_count; i ++) {
         free_models.push (new Model (batch));
     }
-    atomic_int free_readers = 8;
+    atomic_int free_readers = 4;
 
     // Profiling
     long double avg = 0;
@@ -95,7 +95,7 @@ void process_directory (int repeats = 1) {
     fout.tie ();
     fout << "image number,label" << '\n';
     for (int i = 1; i <= cnt; i ++) {
-        fout << i << ',' << aux [i] << '\n';
+        //fout << i << ',' << aux [i] << '\n';
     }
     fout.flush ();
     fout.close ();
@@ -112,17 +112,6 @@ void process_directory (int repeats = 1) {
 */
 int main (int argc, char* argv []) {
     ios_base::sync_with_stdio (false);
-
-    // tq q = tq ();
-    // vector <thread> threads;
-    // for (int i = 0; i < 10; i++) {
-    //     threads.push_back (thread (addnprint, &q, (void*) i));
-    // }
-    // for (auto& th : threads) {
-    //     th.join ();
-    // }
-    // return 1;
-
 
     // Initialize model
     auto NOW;

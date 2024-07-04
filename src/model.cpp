@@ -150,7 +150,7 @@ void Model::process_input (const std::string& filename, int pos, std::atomic_int
     (*free_readers) --;
 }
 
-#include <iostream>
+
 /**
  * Forward pass
  * Takes an auxiliary array to store results in,
