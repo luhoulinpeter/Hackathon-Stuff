@@ -28,7 +28,7 @@ using namespace std;
  * Process all tensors in /tensors directory
 */
 void process_directory (int repeats = 1) {
-    string tensors_path = filesystem::current_path ().string () + "/tensors";
+    string tensors_path = filesystem::current_path ().string () + "/tensors_ext";
 
     // Get number of files in directory
     string tpath = (*filesystem::directory_iterator (tensors_path)).path ().string ();
@@ -36,14 +36,13 @@ void process_directory (int repeats = 1) {
     int size = 1; for (int i = 0; i < digits; i ++, size *= 10);
     char* aux = new char [size + 1];
 
-    unsigned long int model_count = 8;
-    queue <Model*> free_models;
-    int batch = 4;
-    for (unsigned long int i = 0; i < model_count; i ++) {
+    int model_count = 8;
+    tq free_models = tq ();
+    int batch = 256;
+    for (int i = 0; i < model_count; i ++) {
         free_models.push (new Model (batch));
     }
     atomic_int free_readers = 8;
-    atomic <Model*> locked_by;
 
     // Profiling
     long double avg = 0;
@@ -58,16 +57,16 @@ void process_directory (int repeats = 1) {
             string path = (*it).path ().string ();
 
             while (free_models.empty ()) {}
-            Model* current = free_models.front ();
+            Model* current = (Model*) free_models.front ();
 
             if (current -> is_ready ()) {
                 free_models.pop ();
-                thread t (&Model::forward_pass, current, aux, &free_models, &locked_by, 0);
+                thread t (&Model::forward_pass, current, aux, &free_models, 0);
                 t.detach ();
-                last_launch = cnt + 1;
+                last_launch = cnt;
                 
                 while (free_models.empty ()) {}
-                current = free_models.front ();
+                current = (Model*) free_models.front ();
             }
 
             while (free_readers == 0) {}
@@ -78,18 +77,13 @@ void process_directory (int repeats = 1) {
             if (it == end (it)) {
                 if (last_launch != cnt) {
                     free_models.pop ();
-                    thread t (&Model::forward_pass, current, aux, &free_models, &locked_by, cnt - last_launch);
+                    thread t (&Model::forward_pass, current, aux, &free_models, cnt - last_launch);
                     t.detach ();
                 }
                 break;
             }
         }
-        
-        while (locked_by || free_models.size () != model_count) {
-            this_thread::sleep_for (chrono::milliseconds (10));
-            cout<<free_models.size()<<endl;
-        }
-        cout<<"Here"<<endl;
+        while (free_models.size () != model_count) { this_thread::sleep_for (chrono::milliseconds (10)); }
 
         avg += ELAPSED;
         if (r % 100 == 1) { cout << "Completed " << r << " repeats" << endl; }
@@ -108,13 +102,6 @@ void process_directory (int repeats = 1) {
     delete[] aux;
 }
 
-void addnprint (tq* q, void* data) {
-    q -> print_size ("Before");
-    q -> push (data);
-    q -> print_size ("Mid");
-    q -> pop ();
-    q -> print_size ("After");
-}
 
 // Optimisations to try
 // Math:    multiple inputs (done, needs testing), faster exp
