@@ -1,6 +1,9 @@
 #include "model.h"
 #include "params.h"
+#include "reader.h"
 #include <cmath>
+#include <thread>
+#include <mutex>
 
 Model::Layer* Model::layers;
 int Model::current_layer_count;
@@ -116,32 +119,54 @@ void Model::softmax () {
  */
 Model::Model (int batch_size) {
     this -> batch_size = batch_size;
+    this -> current_input = 0;
+    this -> ready = 0;
     data = new double* [LAYERS + 1];
     data [0] = new double [INPUT * batch_size];
     for (int i = 1; i <= LAYERS; i ++) {
         data [i] = new double [layers [i - 1].neuron_count * batch_size];
     }
     outputs = new int [batch_size];
+    mappings = new int [batch_size];
 }
 
 
 /**
- * Get inputs
+ * Return true if all inputs are covered, otherwise false
+ */ 
+bool Model::is_ready () {
+    return current_input == batch_size;
+}
+
+
+/**
+ * Read tensor into current input array
+ * Takes tensor filename, a position for mapping, and a pointer to the number of free readers
  */
-double* Model::get_inputs () {
-    return data [0];
+void Model::process_input (const std::string& filename, int pos, std::atomic_int* free_readers) {
+    mappings [current_input] = pos;
+    std::thread t (read_input, filename, data [0] + current_input * INPUT, &ready, free_readers);
+    t.detach ();
+    current_input ++;
+    (*free_readers) --;
 }
 
 
 /**
  * Forward pass
- * Takes a sub-batch parameter (optional) and returns an array of indexes of the most similar letters
+ * Takes an auxiliary array to store results in,
+ * a queue of models to make itself available again,
+ * and a sub-batch parameter (optional)
 */
-int* Model::forward_pass (int sub_batch) {
+void Model::forward_pass (char* aux, std::queue <Model*>* models, int sub_batch) {
+    // Save original batch size
     int original_batch = batch_size;
     if (sub_batch > 0 && sub_batch < batch_size) {
         batch_size = sub_batch;
     }
+
+    // Wait for all inputs to be read
+    while (ready != batch_size) {}
 
     // Activate layer K-1, then process it to layer K
     for (int i = 0; i < LAYERS - 1; i ++) {
@@ -153,8 +178,20 @@ int* Model::forward_pass (int sub_batch) {
     process (LAYERS - 1);
     softmax ();
 
+    // Write results to the auxilary output array
+    for (int i = 0; i < batch_size; i ++) {
+        int res = outputs [i];
+        aux [mappings [i]] = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
+    }
+
+    // Restore original batch size
     batch_size = original_batch;
-    return outputs;
+
+    // Make this model available again by adding it to the queue of available models
+    std::mutex mtx;
+    mtx.lock ();
+    models -> push (this);
+    mtx.unlock ();
 }
 
 
@@ -168,4 +205,5 @@ Model::~Model () {
         delete[] data [i];
     }
     delete[] data;
+    delete[] mappings;
 }

@@ -1,6 +1,10 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#include <atomic>
+#include <string>
+#include <queue>
+
 /**
  * Neural network model class
 */
@@ -20,8 +24,11 @@ private:
 
     // Model data
     int batch_size;
+    int current_input;
+    std::atomic_int ready;
     double** data;
     int* outputs;
+    int* mappings;
 
     // Process the given layer in forward propagation
     void process (int layer);
@@ -34,7 +41,6 @@ private:
 
 
 public:
-
     // Model initialization
     static void init ();
 
@@ -47,11 +53,14 @@ public:
     // The constuctor
     Model (int batch_size);
 
-    // Get inputs
-    double* get_inputs ();
+    // Is model has all inputs filled in
+    bool is_ready ();
+
+    // Read tensor into input
+    void process_input (const std::string& filename, int pos, std::atomic_int* free_readers);
 
     // Forward pass
-    int* forward_pass (int sub_batch);
+    void forward_pass (char* aux, std::queue <Model*>* models, int sub_batch);
 
     // The destructor
     ~Model ();

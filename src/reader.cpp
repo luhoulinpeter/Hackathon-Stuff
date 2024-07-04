@@ -24,14 +24,18 @@ void parse_line (const string& line, double* values) {
 
 /**
  * Read values from file to an array
- * Takes a filename to read an input from and an input array
+ * Takes a tensor filename, an input array,
+ * a pointer to "ready" variable in related model and to a number of free readers
  */
- void read_input (const string& filename, double* input) {
+ void read_input (const string& filename, double* input, atomic_int* ready, atomic_int* free_readers) {
     ifstream file (filename);
     string line;
     getline (file, line);
     file.close ();
     parse_line (line, input);
+
+    (*ready) ++;
+    (*free_readers) ++;
 }
 
 

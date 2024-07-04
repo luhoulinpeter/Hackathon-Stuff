@@ -11,9 +11,11 @@
 #include "params.h"
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <filesystem>
 #include <chrono>
+#include <thread>
+#include <atomic>
+#include <queue>
 
 #define NOW start = chrono::high_resolution_clock::now ()
 #define ELAPSED chrono::duration_cast <chrono::microseconds> (chrono::high_resolution_clock::now () - start).count () / 1000.0
@@ -33,34 +35,56 @@ void process_directory (int repeats = 1) {
     int size = 1; for (int i = 0; i < digits; i ++, size *= 10);
     char* aux = new char [size + 1];
 
-    int batch = 10;
-    Model model (batch);
+    unsigned long int model_count = 8;
+    queue <Model*> free_models;
+    int batch = 4;
+    for (unsigned long int i = 0; i < model_count; i ++) {
+        free_models.push (new Model (batch));
+    }
+
+    atomic_int free_readers = 8;
 
     // Profiling
     long double avg = 0;
     for (int r = 0; r < repeats; r ++) {
         auto NOW;
         
-        int mapping [batch];
+        //int mapping [batch];
         cnt = 0;
+        int last_launch = 0;
         auto it = filesystem::directory_iterator (tensors_path);
         while (true) {
             string path = (*it).path ().string ();
-            read_input (path, model.get_inputs () + cnt % batch * INPUT);
-            mapping [cnt % batch] = stoi (path.substr (tensors_path.size () + 1, digits));
-            it ++; cnt ++;
 
-            if (cnt % batch == 0 || it == end (it)) {
-                int s = cnt % batch == 0 ? batch : cnt % batch;
-                int* out = model.forward_pass (s);
-                for (int u = 0; u < s; u ++) {
-                    int res = out [u];
-                    aux [mapping [u]] = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
+            while (free_models.empty ()) {}
+            Model* current = free_models.front ();
+
+            if (current -> is_ready ()) {
+                free_models.pop ();
+                thread t (&Model::forward_pass, current, aux, &free_models, 0);
+                t.detach ();
+                last_launch = cnt + 1;
+                
+                while (free_models.empty ()) {}
+                current = free_models.front ();
+            }
+
+            while (free_readers == 0) {}
+            current -> process_input (path, stoi (path.substr (tensors_path.size () + 1, digits)), &free_readers);
+
+            it ++; cnt ++;
+            
+            if (it == end (it)) {
+                if (last_launch != cnt) {
+                    free_models.pop ();
+                    thread t (&Model::forward_pass, current, aux, &free_models, cnt - last_launch);
+                    t.detach ();
                 }
-                if (it == end (it)) { break; }
+                break;
             }
         }
- 
+        while (free_models.size () != model_count) {}
+
         avg += ELAPSED;
         if (r % 100 == 1) { cout << "Completed " << r << " repeats" << endl; }
     }
