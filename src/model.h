@@ -50,11 +50,8 @@ public:
     // Get inputs
     double* get_inputs ();
 
-    // Forward pass with limited batch size
-    int* sub_forward_pass (int sub_batch);
-
     // Forward pass
-    int* forward_pass ();
+    int* forward_pass (int sub_batch);
 
     // The destructor
     ~Model ();

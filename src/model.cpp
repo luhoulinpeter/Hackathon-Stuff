@@ -134,26 +134,15 @@ double* Model::get_inputs () {
 
 
 /**
- * Forward pass with limited batch size
- */
-int* Model::sub_forward_pass (int sub_batch) {
+ * Forward pass
+ * Takes a sub-batch parameter (optional) and returns an array of indexes of the most similar letters
+*/
+int* Model::forward_pass (int sub_batch) {
     int original_batch = batch_size;
     if (sub_batch > 0 && sub_batch < batch_size) {
         batch_size = sub_batch;
     }
 
-    forward_pass ();
-    
-    batch_size = original_batch;
-    return outputs;
-}
-
-
-/**
- * Forward pass
- * Takes input array as a parameter and returns an array of indexes of the most similar letters
-*/
-int* Model::forward_pass () {
     // Activate layer K-1, then process it to layer K
     for (int i = 0; i < LAYERS - 1; i ++) {
         process (i);
@@ -164,6 +153,7 @@ int* Model::forward_pass () {
     process (LAYERS - 1);
     softmax ();
 
+    batch_size = original_batch;
     return outputs;
 }
 

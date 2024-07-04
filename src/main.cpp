@@ -28,12 +28,9 @@ void process_directory (int repeats = 1) {
     string tensors_path = filesystem::current_path ().string () + "/tensors";
 
     // Get number of files in directory
-    // string tpath = (*filesystem::directory_iterator (tensors_path)).path ().string ();
-    // int digits = tpath.size () - 8 - tensors_path.size ();
-    // int size = 1; for (int i = 0; i < digits; i ++, size *= 10);
-    auto it = filesystem::directory_iterator (tensors_path);
-    int size = distance (it, {});
-    int digits = 0; for (int i = size; i > 0; i /= 10, digits ++);
+    string tpath = (*filesystem::directory_iterator (tensors_path)).path ().string ();
+    int digits = tpath.size () - 8 - tensors_path.size (), cnt = 0;
+    int size = 1; for (int i = 0; i < digits; i ++, size *= 10);
     char* aux = new char [size + 1];
 
     int batch = 10;
@@ -44,37 +41,26 @@ void process_directory (int repeats = 1) {
     for (int r = 0; r < repeats; r ++) {
         auto NOW;
         
-        /*/ Processing every file in directory
-        for (auto& entry : filesystem::directory_iterator (tensors_path)) {
-            // Reading data and processing
-            string path = entry.path ().string ();
-            read_input (path, model.get_inputs ());
-            int* out = model.forward_pass ();
-            int res = out [0];
-
-            // Converting and saving the result
-            char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
-            aux [stoi (path.substr (tensors_path.size () + 1, digits))] = letter;
-        }*/
-
         int mapping [batch];
+        cnt = 0;
         auto it = filesystem::directory_iterator (tensors_path);
-        for (int i = 0; i < size; it ++) {
+        while (true) {
             string path = (*it).path ().string ();
-            read_input (path, model.get_inputs () + i % batch * INPUT);
-            mapping [i % batch] = stoi (path.substr (tensors_path.size () + 1, digits));
-            i ++;
+            read_input (path, model.get_inputs () + cnt % batch * INPUT);
+            mapping [cnt % batch] = stoi (path.substr (tensors_path.size () + 1, digits));
+            it ++; cnt ++;
 
-            if (i % batch == 0 || i == size) {
-                int s = i % batch == 0 ? batch : i % batch;
-                int* out = model.sub_forward_pass (s);
+            if (cnt % batch == 0 || it == end (it)) {
+                int s = cnt % batch == 0 ? batch : cnt % batch;
+                int* out = model.forward_pass (s);
                 for (int u = 0; u < s; u ++) {
                     int res = out [u];
                     aux [mapping [u]] = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
                 }
+                if (it == end (it)) { break; }
             }
         }
-        
+ 
         avg += ELAPSED;
         if (r % 100 == 1) { cout << "Completed " << r << " repeats" << endl; }
     }
@@ -84,7 +70,7 @@ void process_directory (int repeats = 1) {
     ofstream fout ("results.csv");
     fout.tie ();
     fout << "image number,label" << '\n';
-    for (int i = 1; i < size; i ++) {
+    for (int i = 1; i <= cnt; i ++) {
         fout << i << ',' << aux [i] << '\n';
     }
     fout.flush ();
