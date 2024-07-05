@@ -100,7 +100,7 @@ void process_directory (int repeats = 1) {
     // ofstream fout ("results.csv");
     // fout.tie ();
     // fout << "image number,label" << '\n';
-    // for (int i = 1; i <= 55; i ++) {
+    // for (int i = 1; i <= cnt; i ++) {
     //     fout << i << ',' << aux [i] << '\n';
     // }
     // fout.flush ();
