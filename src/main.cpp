@@ -45,9 +45,8 @@ void init_model () {
 // Function to collect all file paths in the directory
 vector<string> collect_file_paths(const string& directory) {
     vector<string> file_paths;
-    #pragma omp parallel for ordered
+    
     for (const auto& entry : filesystem::directory_iterator(directory)) {
-        #pragma omp ordered
         file_paths.push_back(entry.path().string());
     }
     return file_paths;
@@ -94,7 +93,13 @@ void process_directory (Model& model, int repeats = 1) {
 
             // Converting and saving the result
             char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
-            aux [stoi (path.substr (tensors_path.size () + 1, digits))] = letter;
+            int index = stoi(path.substr(tensors_path.size() + 1, digits));
+
+            #pragma omp critical
+            {
+                aux[index] = letter;
+            }
+
             cnt ++;
         }
         
