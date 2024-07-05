@@ -97,14 +97,14 @@ void process_directory (int repeats = 1) {
     cout << "Average directory processing time: " << avg / repeats << " milliseconds" << endl;
 
     // Writing results to csv
-    // ofstream fout ("results.csv");
-    // fout.tie ();
-    // fout << "image number,label" << '\n';
-    // for (int i = 1; i <= cnt; i ++) {
-    //     fout << i << ',' << aux [i] << '\n';
-    // }
-    // fout.flush ();
-    // fout.close ();
+    ofstream fout ("results.csv");
+    fout.tie ();
+    fout << "image number,label" << '\n';
+    for (int i = 1; i <= cnt; i ++) {
+        fout << i << ',' << aux [i] << '\n';
+    }
+    fout.flush ();
+    fout.close ();
 
     // Check correctness
     int correct = 0;
@@ -115,6 +115,10 @@ void process_directory (int repeats = 1) {
     cout << "Correct: " << correct << " out of " << cnt << endl;
 
     // Free allocated resources
+    while (!free_models.empty ()) {
+        delete (Model*) free_models.front ();
+        free_models.pop ();
+    }
     delete[] aux;
 }
 
