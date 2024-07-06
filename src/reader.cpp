@@ -64,53 +64,39 @@ double* read_input (const string& filename) {
  * Takes a weights filename and returns a Parameters structure with parsed values
  */
 Parameters* read_parameters (const string& filename) {
-    Parameters* parameters = new Parameters;
-    ifstream file (filename);
-    string line;
     
-    getline (file, line);
-    getline (file, line);
-    parse_line (line, parameters -> weightsL1);
-    getline (file, line);
-    getline (file, line);
-    parse_line (line, parameters -> biasesL1);
-    getline (file, line);
-    getline (file, line);
-    parse_line (line, parameters -> weightsL2);
-    getline (file, line);
-    getline (file, line);
-    parse_line (line, parameters -> biasesL2);
-    getline (file, line);
-    getline (file, line);
-    parse_line (line, parameters -> weightsL3);
-    getline (file, line);
-    getline (file, line);
-    parse_line (line, parameters -> biasesL3);
-    getline (file, line);
-    getline (file, line);
-    parse_line (line, parameters -> weightsL4);
-    getline (file, line);
-    getline (file, line);
-    parse_line (line, parameters -> biasesL4);
-    getline (file, line);
-    getline (file, line);
-    parse_line (line, parameters -> weightsL5);
-    getline (file, line);
-    getline (file, line);
-    parse_line (line, parameters -> biasesL5);
-    getline (file, line);
-    getline (file, line);
-    parse_line (line, parameters -> weightsL6);
-    getline (file, line);
-    getline (file, line);
-    parse_line (line, parameters -> biasesL6);
-    getline (file, line);
-    getline (file, line);
-    parse_line (line, parameters -> weightsL7);
-    getline (file, line);
-    getline (file, line);
-    parse_line (line, parameters -> biasesL7);
+   Parameters* parameters = new Parameters;
+    ifstream file(filename);
+    if (!file.is_open()) {
+        throw runtime_error("Failed to open file: " + filename);
+    }
 
-    file.close ();
+    string fileContent((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+    file.close();
+
+    istringstream stream(fileContent);
+    string line;
+    auto parse_and_advance = [&stream, &line](double* values) {
+        getline(stream, line);  // Skip the line before the data
+        getline(stream, line);
+        parse_line(line, values);
+    };
+
+    parse_and_advance(parameters->weightsL1);
+    parse_and_advance(parameters->biasesL1);
+    parse_and_advance(parameters->weightsL2);
+    parse_and_advance(parameters->biasesL2);
+    parse_and_advance(parameters->weightsL3);
+    parse_and_advance(parameters->biasesL3);
+    parse_and_advance(parameters->weightsL4);
+    parse_and_advance(parameters->biasesL4);
+    parse_and_advance(parameters->weightsL5);
+    parse_and_advance(parameters->biasesL5);
+    parse_and_advance(parameters->weightsL6);
+    parse_and_advance(parameters->biasesL6);
+    parse_and_advance(parameters->weightsL7);
+    parse_and_advance(parameters->biasesL7);
+
     return parameters;
+
 }
