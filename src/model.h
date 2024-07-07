@@ -26,6 +26,7 @@ private:
     int batch_size;
     int current_input;
     std::atomic_int ready;
+    double* input;
     double** data;
     int* outputs;
     int* mappings;

@@ -28,13 +28,17 @@ void Model::init () {
  * Takes number of neurons in this layers along with their weights and biases
  */
 void Model::add_layer (int neuron_count, double* weights, double* biases) {
-    layers [current_layer_count] = {
-        neuron_count,
-        current_layer_count > 0 ? layers [current_layer_count - 1].neuron_count : INPUT,
-        weights,
-        biases
-    };
+    Layer& c_layer = layers [current_layer_count];
+    c_layer.neuron_count = neuron_count;
+    c_layer.input_count = current_layer_count > 0 ? layers [current_layer_count - 1].neuron_count : INPUT;
     current_layer_count ++;
+    
+    int b_weights = sizeof (double) * c_layer.input_count * c_layer.neuron_count;
+    int b_biases = sizeof (double) * c_layer.neuron_count;
+    cudaMalloc (&(c_layer.weights), b_weights);
+    cudaMalloc (&(c_layer.biases), b_biases);
+    cudaMemcpy (c_layer.weights, weights, b_weights, cudaMemcpyHostToDevice);
+    cudaMemcpy (c_layer.biases, biases, b_biases, cudaMemcpyHostToDevice);
 }
 
 
@@ -43,10 +47,32 @@ void Model::add_layer (int neuron_count, double* weights, double* biases) {
  */
 void Model::free () {
     for (int i = 0; i < LAYERS; i ++) {
-        delete[] layers [i].weights;
-        delete[] layers [i].biases;
+        cudaFree (layers [i].weights);
+        cudaFree (layers [i].biases);
     }
     delete[] layers;
+}
+
+
+/** */
+__global__ void reset_layer_gpu (int n, double* layer) {
+    int id = blockIdx.x * blockDim.x + threadIdx.x;
+    if (id < n) {
+        data [id] = 0;
+    }
+}
+
+
+/** */
+__global__ void process_gpu (
+    int input_count, double* inputs,
+    int neuron_count, double* weights, double* biases,
+    double* outputs
+) {
+    int id = blockIdx.x * blockDim.x + threadIdx.x;
+    if (id < n) {
+        outputs [id] = (data [id] > 0);
+    }
 }
 
 
@@ -76,6 +102,15 @@ void Model::process (int layer) {
 }
 
 
+/** */
+__global__ void relu_gpu (int n, double* data) {
+    int id = blockIdx.x * blockDim.x + threadIdx.x;
+    if (id < n) {
+        data [id] *= (data [id] > 0);
+    }
+}
+
+
 /**
  * Activate the given layer using ReLU
  */
@@ -85,6 +120,12 @@ void Model::relu (int layer) {
     for (int i = 0; i < total; i ++) {
         c_data [i] *= (c_data [i] > 0);
     }
+}
+
+
+/** */
+__global__ softmax_gpu () {
+    //
 }
 
 
@@ -127,9 +168,10 @@ Model::Model (int batch_size) {
     this -> current_input = 0;
     this -> ready = 0;
     data = new double* [LAYERS + 1];
-    data [0] = new double [INPUT * batch_size];
+    cudaMalloc (&(data [0]), sizeof (double) * INPUT * batch_size);
+    input = new double [INPUT * batch_size];
     for (int i = 1; i <= LAYERS; i ++) {
-        data [i] = new double [layers [i - 1].neuron_count * batch_size];
+        cudaMalloc (&(data [i]), sizeof (double) * layers [i - 1].neuron_count * batch_size);
     }
     outputs = new int [batch_size];
     mappings = new int [batch_size];
@@ -150,10 +192,10 @@ bool Model::is_ready () {
  */
 void Model::process_input (const std::string& filename, int pos, std::atomic_int* free_readers) {
     mappings [current_input] = pos;
-    std::thread t (read_input, filename, data [0] + current_input * INPUT, &ready, free_readers);
+    std::thread t (read_input, filename, input + current_input * INPUT, &ready, free_readers);
     t.detach ();
-    current_input ++;
     (*free_readers) --;
+    current_input ++;
 }
 
 
@@ -172,6 +214,9 @@ void Model::forward_pass (char* aux, tq* models, int sub_batch) {
 
     // Wait for all inputs to be read
     while (ready != batch_size) {IDLE}
+
+    // Copy inputs to device
+    cudaMemcpy (data [0], input, sizeof (double) * INPUT * batch_size, cudaMemcpyHostToDevice);
 
     // Activate layer K-1, then process it to layer K
     for (int i = 0; i < LAYERS - 1; i ++) {
@@ -204,9 +249,10 @@ void Model::forward_pass (char* aux, tq* models, int sub_batch) {
  * Frees all model outputs and data
  */
 Model::~Model () {
+    delete[] input;
     delete[] outputs;
     for (int i = 0; i <= LAYERS; i ++) {
-        delete[] data [i];
+        cudaFree (data [i]);
     }
     delete[] data;
     delete[] mappings;
