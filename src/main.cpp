@@ -64,7 +64,6 @@ void process_directory (Model& model, int repeats = 1) {
         cerr << "No files found in the tensors directory." << endl;
         return;
     }
-    // string path = (*filesystem::directory_iterator (tensors_path)).path ().string ();
     string path = file_paths[0];
 
     int digits = path.size () - 8 - tensors_path.size ();
@@ -75,37 +74,34 @@ void process_directory (Model& model, int repeats = 1) {
 
     // Profiling
     long double avg = 0;
+    
+    
     for (int i = 0; i < repeats; i ++) {
         auto NOW;
 
         // Processing every file in directory
         cnt=1;
-    
-        #pragma omp parallel for
-        // for (auto& entry : filesystem::directory_iterator (tensors_path)) {
+        char letter;
+
+        // #pragma omp parallel for 
         for (size_t j = 0; j < file_paths.size(); j++) {
             // Reading data and processing
-            // string path = entry.path ().string ();
             string path = file_paths[j];
             int* out = model.forward_pass (read_input (path));
             int res = out [0];
             delete[] out;
+            letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
 
             // Converting and saving the result
-            char letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
-            int index = stoi(path.substr(tensors_path.size() + 1, digits));
-
-            #pragma omp critical
-            {
-                aux[index] = letter;
-            }
-
+            aux[stoi(path.substr(tensors_path.size() + 1, digits))] = letter;
+            
             cnt ++;
         }
         
         avg += ELAPSED;
         if (i % 100 == 1) { cout << "Completed " << i << " repeats" << endl; }
     }
+
     cout << "Average directory processing time: " << avg / repeats << " milliseconds" << endl;
 
     // Writing results to csv
