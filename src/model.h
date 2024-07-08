@@ -29,7 +29,7 @@ private:
     double* input;
     double** data;
     double* expsums;
-    double* results;
+    int* results;
     int* outputs;
     int* mappings;
 

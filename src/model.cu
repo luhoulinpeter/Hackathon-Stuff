@@ -174,6 +174,23 @@ __global__ void softmax_gpu (int n, int categories, double* outputs, double* exp
 
 
 /**
+ * Cuda kernel code to select outputs with highest probabilities
+ */
+__global__ void select_gpu (int batch_size, int categories, double* outputs, int* results) {
+    double max;
+    for (int u = 0; u < batch_size; u ++) {
+        max = 0;
+        for (int i = 0; i < categories; i ++) {
+            if (outputs [u * categories + i] > max) {
+                max = outputs [u * categories + i];
+                results [u] = i;
+            }
+        }
+    }
+}
+
+
+/**
  * Activate the last layer using softmax
  */
 void Model::softmax () {
@@ -194,20 +211,12 @@ void Model::softmax () {
 
     // Perform softmax activation
     softmax_gpu <<<grid_size, block_size>>> (total, categories, c_data, expsums);
-    
-    // Copy outputs back to hosh
-    cudaMemcpy (results, c_data, total * sizeof (double), cudaMemcpyDeviceToHost);
 
-    // Process results for each batch
-    for (int u = 0; u < batch_size; u ++) {
-        double max = 0;
-        for (int i = 0; i < categories; i ++) {
-            if (results [u * categories + i] > max) {
-                max = results [u * categories + i];
-                outputs [u] = i;
-            }
-        }
-    }
+    // Process results
+    select_gpu <<<1, 1>>> (batch_size, categories, c_data, results);
+    
+    // Copy results back to host
+    cudaMemcpy (outputs, results, batch_size * sizeof (int), cudaMemcpyDeviceToHost);
 }
 
 
@@ -226,7 +235,7 @@ Model::Model (int batch_size) {
         cudaMalloc (&(data [i]), sizeof (double) * layers [i - 1].neuron_count * batch_size);
     }
     cudaMalloc (&expsums, sizeof (double) * batch_size);
-    results = new double [batch_size * layers [LAYERS - 1].neuron_count];
+    cudaMalloc (&results, sizeof (int) * batch_size);
     outputs = new int [batch_size];
     mappings = new int [batch_size];
 }
@@ -305,11 +314,11 @@ void Model::forward_pass (char* aux, tq* models, int sub_batch) {
 Model::~Model () {
     delete[] input;
     cudaFree (expsums);
+    cudaFree (results);
     for (int i = 0; i <= LAYERS; i ++) {
         cudaFree (data [i]);
     }
     delete[] data;
-    delete[] results;
     delete[] outputs;
     delete[] mappings;
 }
