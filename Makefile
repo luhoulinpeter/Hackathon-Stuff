@@ -17,12 +17,12 @@ OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS)) $(BUILD_DIR)/model.
 all: $(BIN_DIR)/$(TARGET)
 
 $(BUILD_DIR)/model.o:
-	nvcc -c $(SRC_DIR)/model.cu
+	nvcc -gencode=arch=compute_61,code=compute_61 -O3 -o $(BUILD_DIR)/model.o -c $(SRC_DIR)/model.cu
 
 # Linking rule
 $(BIN_DIR)/$(TARGET): $(OBJS)
 	@mkdir -p $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) $^ -o $@ -L/usr/local/cuda/lib64 -lcuda -lcudart
 
 # Compilation rule
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)

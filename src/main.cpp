@@ -25,7 +25,7 @@ using namespace std;
  * Process all tensors in /tensors directory
 */
 void process_directory (int repeats = 1) {
-    string tensors_path = filesystem::current_path ().string () + "/tensors_10k";
+    string tensors_path = filesystem::current_path ().string () + "/tensors";
 
     // Get number of files in directory
     string tpath = (*filesystem::directory_iterator (tensors_path)).path ().string ();

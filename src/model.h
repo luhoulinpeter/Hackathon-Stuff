@@ -28,6 +28,7 @@ private:
     std::atomic_int ready;
     double* input;
     double** data;
+    double* results;
     int* outputs;
     int* mappings;
 
