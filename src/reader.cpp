@@ -117,21 +117,4 @@ void init_model () {
     Model::add_layer (25, weightsL5, biasesL5);
     Model::add_layer (40, weightsL6, biasesL6);
     Model::add_layer (52, weightsL7, biasesL7);
-
-    // Free host weights and biases
-    delete[] weightsL1;
-    delete[] weightsL2;
-    delete[] weightsL3;
-    delete[] weightsL4;
-    delete[] weightsL5;
-    delete[] weightsL6;
-    delete[] weightsL7;
-
-    delete[] biasesL1;
-    delete[] biasesL2;
-    delete[] biasesL3;
-    delete[] biasesL4;
-    delete[] biasesL5;
-    delete[] biasesL6;
-    delete[] biasesL7;
 }

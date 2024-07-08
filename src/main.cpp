@@ -34,13 +34,13 @@ void process_directory (int repeats = 1) {
     char* aux = new char [size + 1];
 
     // Initialized parameters
-    int model_count = 4;
+    int model_count = 8;
     tq free_models = tq ();
     int batch = 256;
     for (int i = 0; i < model_count; i ++) {
         free_models.push (new Model (batch));
     }
-    atomic_int free_readers = 4;
+    atomic_int free_readers = 8;
 
     // Profiling
     long double avg = 0;
@@ -101,7 +101,7 @@ void process_directory (int repeats = 1) {
     fout.tie ();
     fout << "image number,label" << '\n';
     for (int i = 1; i <= cnt; i ++) {
-        fout << i << ',' << aux [i] << '\n';
+        //fout << i << ',' << aux [i] << '\n';
     }
     fout.flush ();
     fout.close ();

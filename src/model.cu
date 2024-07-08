@@ -29,16 +29,23 @@ void Model::init () {
  */
 void Model::add_layer (int neuron_count, double* weights, double* biases) {
     Layer& c_layer = layers [current_layer_count];
+    
+    // Initialize layer
     c_layer.neuron_count = neuron_count;
     c_layer.input_count = current_layer_count > 0 ? layers [current_layer_count - 1].neuron_count : INPUT;
     current_layer_count ++;
     
+    // Allocate space and copy data to device
     int b_weights = sizeof (double) * c_layer.input_count * c_layer.neuron_count;
     int b_biases = sizeof (double) * c_layer.neuron_count;
     cudaMalloc (&(c_layer.weights), b_weights);
     cudaMalloc (&(c_layer.biases), b_biases);
     cudaMemcpy (c_layer.weights, weights, b_weights, cudaMemcpyHostToDevice);
     cudaMemcpy (c_layer.biases, biases, b_biases, cudaMemcpyHostToDevice);
+
+    // Free host weights and biases
+    delete[] weights;
+    delete[] biases;
 }
 
 

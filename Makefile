@@ -1,38 +1,53 @@
-# Compiler
+# Compilers
 CXX = g++
-# Compiler flags
-CXXFLAGS = -std=c++17 -O3 -pthread -Wall -Wextra -g
-# Executable name
-TARGET = speed_gpu
+NVCC = nvcc
+
+# Compilers flags
+CXX_FLAGS = -std=c++17 -pthread -O3 -Wall -Wextra
+NVCC_FLAGS = -gencode=arch=compute_61,code=compute_61 -O3
+CUDA_FLAGS = -L/usr/local/cuda/lib64 -lcuda -lcudart
+
 # Directories
 SRC_DIR = src
 BUILD_DIR = build
 BIN_DIR = bin
-# Source files
-SRCS = $(wildcard $(SRC_DIR)/*.cpp)
-# Object files
-OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS)) $(BUILD_DIR)/model.o
+
+# Target names
+CPU_TARGET = $(BIN_DIR)/speed_cpu
+GPU_TARGET = $(BIN_DIR)/speed_gpu
+
+# Objects
+OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/tq.o $(BUILD_DIR)/reader.o
+CPU_OBJS = $(OBJS) $(BUILD_DIR)/model.o
+GPU_OBJS = $(OBJS) $(BUILD_DIR)/model_gpu.o
+
+.PHONY: all init clean
+
 
 # Targets
-all: $(BIN_DIR)/$(TARGET)
+all: init $(CPU_TARGET) $(GPU_TARGET)
 
-$(BUILD_DIR)/model.o:
-	nvcc -gencode=arch=compute_61,code=compute_61 -O3 -o $(BUILD_DIR)/model.o -c $(SRC_DIR)/model.cu
-
-# Linking rule
-$(BIN_DIR)/$(TARGET): $(OBJS)
-	@mkdir -p $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) $^ -o $@ -L/usr/local/cuda/lib64 -lcuda -lcudart
-
-# Compilation rule
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(BUILD_DIR):
+# Init
+init:
 	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(BIN_DIR)
+
+# Build CPU target
+$(CPU_TARGET): $(CPU_OBJS)
+	$(CXX) $(CXX_FLAGS) $(CPU_OBJS) -o $(CPU_TARGET)
+
+# Build GPU target
+$(GPU_TARGET): $(GPU_OBJS)
+	$(CXX) $(CXX_FLAGS) $(GPU_OBJS) -o $(GPU_TARGET) $(CUDA_FLAGS)
+
+# Compile .o files
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
+
+# Compile GPU model
+$(BUILD_DIR)/model_gpu.o:
+	$(NVCC) $(NVCC_FLAGS) -o $(BUILD_DIR)/model_gpu.o -c $(SRC_DIR)/model.cu
 
 # Clean rule
 clean:
 	rm -rf $(BUILD_DIR) $(BIN_DIR)
-
-.PHONY: all clean
