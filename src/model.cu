@@ -69,13 +69,19 @@ __global__ void clear_gpu (int n, double* data) {
  * Cuda kernel code to process a layer (perform matrix multiplication)
  */
 __global__ void process_gpu (
-    int input_count, int neuron_count,
+    int batch_size, int input_count, int neuron_count,
     double* inputs, double* weights, double* outputs
 ) {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
-    //outputs [u * neuron_count + i] += inputs [u * input_count + j] * weights [i * input_count + j];
-    if (id < input_count * neuron_count) {
-        atomicAdd (outputs + id % input_count, inputs [id % neuron_count] * weights [id]);
+
+    if (id < batch_size * neuron_count) {
+        for (int j = 0; j < input_count; j ++) {
+            atomicAdd (
+                outputs + id,
+                inputs [id / neuron_count * input_count + j] *
+                weights [id % neuron_count * input_count + j]
+            );
+        }
     }
 }
 
@@ -104,29 +110,17 @@ void Model::process (int layer) {
     // Setup the block and grid sizes
     int block_size = 1024;
     int grid_size = (int) ceil ((double) batch_size * c_layer.neuron_count / block_size);
-    int layer_grid_size = (int) ceil ((double) c_layer.input_count * c_layer.neuron_count / block_size);
 
-    // 32]rp[pds=2we[fp]]w)(aads)
+    // Reset all outputs
     clear_gpu <<<grid_size, block_size>>> (batch_size * c_layer.neuron_count, c_data);
-    for (int u = 0; u < batch_size; u ++) {
-        process_gpu <<<layer_grid_size, block_size>>> (c_layer.input_count, c_layer.neuron_count,
-            input + u * c_layer.input_count, c_layer.weights, c_data + u * c_layer.neuron_count);
-    }
-    add_bias_gpu <<<grid_size, block_size>>> (batch_size, c_layer.neuron_count, c_data, c_layer.biases);
-    
-    /*// For each neurone in this layer from each batch
-    for (int u = 0; u < batch_size; u ++) {
-        for (int i = 0; i < c_layer.neuron_count; i ++) {
-            double& c_out = c_data [u * c_layer.neuron_count + i];
 
-            // Compute the output for current neurone
-            c_out = 0;
-            for (int j = 0; j < c_layer.input_count; j ++) {
-                c_out += input [u * c_layer.input_count + j] * c_layer.weights [i * c_layer.input_count + j];
-            }
-            c_out += c_layer.biases [i];
-        }
-    }*/
+    // Perform matrix multiplication
+    process_gpu <<<grid_size, block_size>>> (
+        batch_size, c_layer.input_count, c_layer.neuron_count, input, c_layer.weights, c_data
+    );
+
+    // Add bias to the outputs
+    add_bias_gpu <<<grid_size, block_size>>> (batch_size, c_layer.neuron_count, c_data, c_layer.biases);
 }
 
 
