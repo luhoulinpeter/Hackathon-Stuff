@@ -26,7 +26,6 @@ $(BIN_DIR)/$(TARGET): $(OBJS)
 
 # Compilation rule
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
-	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(BUILD_DIR):

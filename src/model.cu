@@ -55,10 +55,10 @@ void Model::free () {
 
 
 /** */
-__global__ void reset_layer_gpu (int n, double* outputs) {
+__global__ void clear_gpu (int n, double* data) {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < n) {
-        outputs [id] = 0;
+        data [id] = 0;
     }
 }
 
@@ -98,7 +98,7 @@ void Model::process (int layer) {
     int block_size = 1024;
     int grid_size = (int) ceil ((double) batch_size * c_layer.neuron_count / block_size);
     int layer_grid_size = (int) ceil ((double) c_layer.input_count * c_layer.neuron_count / block_size);
-    reset_layer_gpu <<<grid_size, block_size>>> (batch_size * c_layer.neuron_count, c_data);
+    clear_gpu <<<grid_size, block_size>>> (batch_size * c_layer.neuron_count, c_data);
     for (int u = 0; u < batch_size; u ++) {
         process_gpu <<<layer_grid_size, block_size>>> (c_layer.input_count, c_layer.neuron_count,
             input + u * c_layer.input_count, c_layer.weights, c_data + u * c_layer.neuron_count);
@@ -148,19 +148,21 @@ void Model::relu (int layer) {
 
 
 /** */
-__global__ void expsum_gpu (int n, double* outputs, double* exp_sum) {
+__global__ void expsum_gpu (int n, int categories, double* outputs, double* exp_sums) {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < n) {
-        atomicAdd (exp_sum, exp (outputs [id]));
+        //atomicAdd (exp_sum, exp (outputs [id]));
+        atomicAdd (exp_sums + id / categories, exp (outputs [id]));
     }
 }
 
 
 /** */
-__global__ void softmax_gpu (int n, double* outputs, double* exp_sum) {
+__global__ void softmax_gpu (int n, int categories, double* outputs, double* exp_sums) {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < n) {
-        outputs [id] = exp (outputs [id]) / *exp_sum;
+        //outputs [id] = exp (outputs [id]) / *exp_sum;
+        outputs [id] = exp (outputs [id]) / exp_sums [id / categories];
     }
 }
 
@@ -171,24 +173,23 @@ __global__ void softmax_gpu (int n, double* outputs, double* exp_sum) {
 void Model::softmax () {
     // Locate the last layer and its outputs
     int categories = layers [LAYERS - 1].neuron_count;
+    int total = batch_size * categories;
     double* c_data = data [LAYERS];
 
-    double zero = 0;
-    double* exp_sum;
-    cudaMalloc (&exp_sum, sizeof (double));
-    for (int u = 0; u < batch_size; u ++) {
-        cudaMemcpy (exp_sum, &zero, sizeof (double), cudaMemcpyHostToDevice);
-        expsum_gpu <<<categories, 1>>> (categories, c_data + u * categories, exp_sum);
-        softmax_gpu <<<categories, 1>>> (categories, c_data + u * categories, exp_sum);
-    }
-    cudaFree (exp_sum);
-    cudaMemcpy (results, c_data, batch_size * categories * sizeof (double), cudaMemcpyDeviceToHost);
+    clear_gpu <<<batch_size, 1>>> (batch_size, expsums);
+
+    int block_size = 1024;
+    int grid_size = (int) ceil ((double) total / block_size);
+    expsum_gpu <<<grid_size, block_size>>> (total, categories, c_data, expsums);
+    softmax_gpu <<<grid_size, block_size>>> (total, categories, c_data, expsums);
+        
+    cudaMemcpy (results, c_data, total * sizeof (double), cudaMemcpyDeviceToHost);
 
     for (int u = 0; u < batch_size; u ++) {
         double max = 0;
         for (int i = 0; i < categories; i ++) {
-            if (results [i] > max) {
-                max = results [i];
+            if (results [u * categories + i] > max) {
+                max = results [u * categories + i];
                 outputs [u] = i;
             }
         }
@@ -206,9 +207,10 @@ void Model::softmax () {
         // Calculate output
         double max = 0;
         for (int i = 0; i < categories; i ++) {
-            c_data [i] = exp (c_data [u * categories + i]) / exp_sum;
-            if (c_data [i] > max) {
-                max = c_data [i];
+            double& c_out = c_data [u * categories + i];
+            c_out = exp (c_out) / exp_sum;
+            if (c_out > max) {
+                max = c_out;
                 outputs [u] = i;
             }
         }
@@ -230,7 +232,8 @@ Model::Model (int batch_size) {
     for (int i = 1; i <= LAYERS; i ++) {
         cudaMalloc (&(data [i]), sizeof (double) * layers [i - 1].neuron_count * batch_size);
     }
-    results = new double [batch_size * L7];
+    cudaMalloc (&expsums, sizeof (double) * batch_size);
+    results = new double [batch_size * layers [LAYERS - 1].neuron_count];
     outputs = new int [batch_size];
     mappings = new int [batch_size];
 }
@@ -308,6 +311,7 @@ void Model::forward_pass (char* aux, tq* models, int sub_batch) {
  */
 Model::~Model () {
     delete[] input;
+    cudaFree (expsums);
     for (int i = 0; i <= LAYERS; i ++) {
         cudaFree (data [i]);
     }
