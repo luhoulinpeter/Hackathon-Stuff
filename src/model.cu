@@ -54,7 +54,9 @@ void Model::free () {
 }
 
 
-/** */
+/**
+ * Cuda kernel code to set values of a given array to 0
+ */
 __global__ void clear_gpu (int n, double* data) {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < n) {
@@ -63,7 +65,9 @@ __global__ void clear_gpu (int n, double* data) {
 }
 
 
-/** */
+/**
+ * Cuda kernel code to process a layer (perform matrix multiplication)
+ */
 __global__ void process_gpu (
     int input_count, int neuron_count,
     double* inputs, double* weights, double* outputs
@@ -76,7 +80,9 @@ __global__ void process_gpu (
 }
 
 
-/** */
+/**
+ * Cuda kernel code to add biases to outputs
+ */
 __global__ void add_bias_gpu (int batch_size, int n, double* outputs, double* biases) {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < n) {
@@ -95,9 +101,12 @@ void Model::process (int layer) {
     double* input = data [layer];
     double* c_data = data [layer + 1];
 
+    // Setup the block and grid sizes
     int block_size = 1024;
     int grid_size = (int) ceil ((double) batch_size * c_layer.neuron_count / block_size);
     int layer_grid_size = (int) ceil ((double) c_layer.input_count * c_layer.neuron_count / block_size);
+
+    // 32]rp[pds=2we[fp]]w)(aads)
     clear_gpu <<<grid_size, block_size>>> (batch_size * c_layer.neuron_count, c_data);
     for (int u = 0; u < batch_size; u ++) {
         process_gpu <<<layer_grid_size, block_size>>> (c_layer.input_count, c_layer.neuron_count,
@@ -121,7 +130,9 @@ void Model::process (int layer) {
 }
 
 
-/** */
+/**
+ * Cuda kernel code to calculate ReLU for given array of outputs
+ */
 __global__ void relu_gpu (int n, double* outputs) {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < n) {
@@ -137,31 +148,32 @@ void Model::relu (int layer) {
     double* c_data = data [layer + 1];
     int total = layers [layer].neuron_count * batch_size;
     
+    // Setup the block and grid sizes
     int block_size = 1024;
     int grid_size = (int) ceil ((double) total / block_size);
+
+    // Perform ReLU activation
     relu_gpu <<<grid_size, block_size>>> (total, c_data);
-    
-    /*for (int i = 0; i < total; i ++) {
-        c_data [i] *= (c_data [i] > 0);
-    }*/
 }
 
 
-/** */
+/**
+ * Cuda kernel code to calculate exponential sums for a batch of given outputs
+ */
 __global__ void expsum_gpu (int n, int categories, double* outputs, double* exp_sums) {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < n) {
-        //atomicAdd (exp_sum, exp (outputs [id]));
         atomicAdd (exp_sums + id / categories, exp (outputs [id]));
     }
 }
 
 
-/** */
+/**
+ * Cuda kernel code to activate the given batch of outputs with exponential sums provided
+ */
 __global__ void softmax_gpu (int n, int categories, double* outputs, double* exp_sums) {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     if (id < n) {
-        //outputs [id] = exp (outputs [id]) / *exp_sum;
         outputs [id] = exp (outputs [id]) / exp_sums [id / categories];
     }
 }
@@ -176,15 +188,23 @@ void Model::softmax () {
     int total = batch_size * categories;
     double* c_data = data [LAYERS];
 
+    // Reset all exponential sums
     clear_gpu <<<batch_size, 1>>> (batch_size, expsums);
 
+    // Setup the block and grid sizes
     int block_size = 1024;
     int grid_size = (int) ceil ((double) total / block_size);
+
+    // Calculate exponential sums
     expsum_gpu <<<grid_size, block_size>>> (total, categories, c_data, expsums);
+
+    // Perform softmax activation
     softmax_gpu <<<grid_size, block_size>>> (total, categories, c_data, expsums);
-        
+    
+    // Copy outputs back to hosh
     cudaMemcpy (results, c_data, total * sizeof (double), cudaMemcpyDeviceToHost);
 
+    // Process results for each batch
     for (int u = 0; u < batch_size; u ++) {
         double max = 0;
         for (int i = 0; i < categories; i ++) {
@@ -194,27 +214,6 @@ void Model::softmax () {
             }
         }
     }
-
-    /*// For each output in last layer from each batch
-    for (int u = 0; u < batch_size; u ++) {
-        double exp_sum = 0;
-
-        // Calculate exp sum
-        for (int i = 0; i < categories; i ++) {
-            exp_sum += exp (c_data [u * categories + i]);
-        }
-
-        // Calculate output
-        double max = 0;
-        for (int i = 0; i < categories; i ++) {
-            double& c_out = c_data [u * categories + i];
-            c_out = exp (c_out) / exp_sum;
-            if (c_out > max) {
-                max = c_out;
-                outputs [u] = i;
-            }
-        }
-    }*/
 }
 
 
