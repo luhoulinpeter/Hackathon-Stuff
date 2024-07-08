@@ -7,8 +7,8 @@ Authors: Carlvince Tan, Lucas Yu, Peter Lu, Volodymyr Kazmirchuk
 
 ## Overview
 This code includes two implementations of a Neural Network, based on pre-trained weights and biases obtained from https://github.com/talo/hackathon-go-brrr: 
-1. Use of just the cpu
-2. Use of gpu on top of the cpu to maximise time efficiency for matrix multiplication operations
+1. Using just the cpu
+2. Using the gpu on top of the cpu to maximise time efficiency for matrix multiplication operations
 
 ## Dependencies 
 - CUDA version 12.5
