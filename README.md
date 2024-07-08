@@ -6,7 +6,7 @@ StartHack Hackathon HPC Neural Network on Digit Recognition
 Authors: Carlvince Tan, Lucas Yu, Peter Lu, Volodymyr Kazmirchuk
 
 ## Overview
-This code includes two implementations of a Neural Network, based on pre-trained weights and biases obtained from [https://github.com/talo/hackathon-go-brrr]: 
+This code includes two implementations of a Neural Network, based on pre-trained weights and biases obtained from https://github.com/talo/hackathon-go-brrr: 
 1. Use of just the cpu
 2. Use of gpu on top of the cpu to maximise time efficiency for matrix multiplication operations
 
