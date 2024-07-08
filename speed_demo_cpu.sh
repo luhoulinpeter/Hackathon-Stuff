@@ -1,5 +1,7 @@
 #!/bin/bash
 
+make
+
 binary="bin/speed_cpu"
 
 if [ ! -x "$binary" ]; then

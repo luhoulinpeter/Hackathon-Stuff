@@ -1,5 +1,7 @@
 #!/bin/bash
 
+make
+
 binary="bin/speed_gpu"
 
 if [ ! -f "$binary" ]; then

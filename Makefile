@@ -1,7 +1,7 @@
 # Compiler
-CXX = g++
+CXX = g++											# Mac: g++-14, after install from brew
 # Compiler flags
-CXXFLAGS = -std=c++17 -Wall -Wextra -g -fopenmp
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -fopenmp		# Mac: add -L/opt/homebrew/opt/libomp/lib -I/opt/homebrew/opt/libomp/include -lomp
 # Executable name
 TARGET = speed_cpu
 # Directories
