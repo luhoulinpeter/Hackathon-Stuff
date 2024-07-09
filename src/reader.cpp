@@ -8,7 +8,7 @@ using namespace std;
 /**
  * Parameters constructor
  * Allocates memory
- */
+*/
 Parameters::Parameters () {
     weightsL1 = new double [INPUT*L1];
     weightsL2 = new double [L1*L2];
@@ -29,9 +29,8 @@ Parameters::Parameters () {
 
 
 /**
- * Parse a line into an array
- * Takes a line to be parse and array to insert parsed values into
- */
+ * Parse a line to string
+*/
 void parse_line (const string& line, double* values) {
     int count = 0;
     istringstream stream (line);
@@ -44,9 +43,8 @@ void parse_line (const string& line, double* values) {
 
 
 /**
- * Read values from file to an array
- * Takes a filename to read an input from and returns an array of values
- */
+ * Reads input values into an array
+*/
 double* read_input (const string& filename) {
     ifstream file (filename);
     string line;
@@ -62,41 +60,55 @@ double* read_input (const string& filename) {
 /**
  * Read weights and biases from file to parameters
  * Takes a weights filename and returns a Parameters structure with parsed values
- */
+*/
 Parameters* read_parameters (const string& filename) {
-    
-   Parameters* parameters = new Parameters;
-    ifstream file(filename);
-    if (!file.is_open()) {
-        throw runtime_error("Failed to open file: " + filename);
-    }
-
-    string fileContent((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-    file.close();
-
-    istringstream stream(fileContent);
+    Parameters* parameters = new Parameters;
+    ifstream file (filename);
     string line;
-    auto parse_and_advance = [&stream, &line](double* values) {
-        getline(stream, line);  // Skip the line before the data
-        getline(stream, line);
-        parse_line(line, values);
-    };
+    
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> weightsL1);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> biasesL1);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> weightsL2);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> biasesL2);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> weightsL3);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> biasesL3);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> weightsL4);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> biasesL4);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> weightsL5);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> biasesL5);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> weightsL6);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> biasesL6);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> weightsL7);
+    getline (file, line);
+    getline (file, line);
+    parse_line (line, parameters -> biasesL7);
 
-    parse_and_advance(parameters->weightsL1);
-    parse_and_advance(parameters->biasesL1);
-    parse_and_advance(parameters->weightsL2);
-    parse_and_advance(parameters->biasesL2);
-    parse_and_advance(parameters->weightsL3);
-    parse_and_advance(parameters->biasesL3);
-    parse_and_advance(parameters->weightsL4);
-    parse_and_advance(parameters->biasesL4);
-    parse_and_advance(parameters->weightsL5);
-    parse_and_advance(parameters->biasesL5);
-    parse_and_advance(parameters->weightsL6);
-    parse_and_advance(parameters->biasesL6);
-    parse_and_advance(parameters->weightsL7);
-    parse_and_advance(parameters->biasesL7);
-
+    file.close ();
     return parameters;
-
 }

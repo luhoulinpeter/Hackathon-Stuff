@@ -1,6 +1,9 @@
 #ifndef PARAMS_H
 #define PARAMS_H
 
+/**
+ * Parameters for each layer in the model
+*/
 #define LAYERS 7
 #define INPUT 225
 #define L1 98

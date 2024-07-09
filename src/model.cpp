@@ -1,3 +1,7 @@
+/**
+ * Methods of Neural network model class
+*/
+
 #include "model.h"
 #include "params.h"
 #include <cmath>
@@ -9,7 +13,7 @@ int Model::current_layer_count;
 
 /**
  * Initialize the general model
- */
+*/
 void Model::init () {
     layers = new Layer [LAYERS];
     current_layer_count = 0;
@@ -19,7 +23,7 @@ void Model::init () {
 /**
  * Add a new layer to the model
  * Takes number of neurons in this layers along with their weights and biases
- */
+*/
 void Model::add_layer (int neuron_count, double* weights, double* biases) {
     layers [current_layer_count] = {
         neuron_count,
@@ -33,7 +37,7 @@ void Model::add_layer (int neuron_count, double* weights, double* biases) {
 
 /**
  * Free memory taken by the general model
- */
+*/
 void Model::free () {
     for (int i = 0; i < LAYERS; i ++) {
         delete[] layers [i].weights;
@@ -70,7 +74,7 @@ void Model::process (int layer, double* input) {
 
 /**
  * Activate the given layer using ReLU
- */
+*/
 void Model::relu (int layer) {
     int total = layers [layer].neuron_count * batch_size;
     for (int i = 0; i < total; i ++) {
@@ -81,7 +85,7 @@ void Model::relu (int layer) {
 
 /**
  * exp() using bitshift
- */
+*/
 inline float fast_exp(float x) {
     union {
         float f;
@@ -94,7 +98,7 @@ inline float fast_exp(float x) {
 
 /**
  * Activate the last layer using softmax
- */
+*/
 void Model::softmax () {
     // Locate the last layer and its outputs
     Layer& c_layer = layers [LAYERS - 1];
@@ -122,7 +126,7 @@ void Model::softmax () {
 
 /**
  * Return an output arrray of indexes
- */
+*/
 int* Model::select () {
     // Locate the last layer and its outputs
     Layer& c_layer = layers [LAYERS - 1];
@@ -148,7 +152,7 @@ int* Model::select () {
 /**
  * Model constructor
  * Takes a batch size as a parameter
- */
+*/
 Model::Model (int batch_size) {
     this -> batch_size = batch_size;
     data = new double* [LAYERS];
@@ -184,7 +188,7 @@ int* Model::forward_pass (double* input) {
 /**
  * Model destructor
  * Frees all model outputs and data
- */
+*/
 Model::~Model () {
     for (int i = 0; i < LAYERS; i ++) {
         delete[] data [i];

@@ -41,8 +41,9 @@ void init_model () {
     delete parameters;
 }
 
-
-// Function to collect all file paths in the directory
+/**
+ * Function to collect all file paths in the directory
+*/
 vector<string> collect_file_paths(const string& directory) {
     vector<string> file_paths;
     
@@ -52,21 +53,15 @@ vector<string> collect_file_paths(const string& directory) {
     return file_paths;
 }
 
-
 /**
  * Process all tensors in /tensors directory
 */
 void process_directory (Model& model, int repeats = 1) {
-    // Dark magic
+
     string tensors_path = filesystem::current_path ().string () + "/tensors";
     vector<string> file_paths = collect_file_paths(tensors_path);
-    if (file_paths.empty()) {
-        cerr << "No files found in the tensors directory." << endl;
-        return;
-    }
-    string path = file_paths[0];
 
-    int digits = path.size () - 8 - tensors_path.size ();
+    int digits = file_paths[0].size () - 8 - tensors_path.size ();
     int size = 1;
     for (int i = 0; i < digits; i ++, size *= 10);
     char* aux = new char [size];
@@ -75,7 +70,6 @@ void process_directory (Model& model, int repeats = 1) {
     // Profiling
     long double avg = 0;
     
-    
     for (int i = 0; i < repeats; i ++) {
         auto NOW;
 
@@ -83,7 +77,6 @@ void process_directory (Model& model, int repeats = 1) {
         cnt=1;
         char letter;
 
-        // #pragma omp parallel for 
         for (size_t j = 0; j < file_paths.size(); j++) {
             // Reading data and processing
             string path = file_paths[j];
@@ -110,18 +103,12 @@ void process_directory (Model& model, int repeats = 1) {
     fout << "image number,label" << '\n';
     for (int i = 1; i < cnt; i ++) {
         fout << i << ',' << aux [i] << '\n';
-        //cout << aux [i] << ' ';
     }
-    //cout << endl;
+
     fout.flush ();
     fout.close ();
     delete[] aux;
 }
-
-
-// Optimisations to try
-// Math:    multiple inputs (done, needs testing), faster exp
-// Mp:      multiprocessing vs threading
 
 /**
  * The main function

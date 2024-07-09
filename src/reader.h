@@ -30,4 +30,4 @@ double* read_input (const std::string& filename);
 // Reads weights from file to parameters
 Parameters* read_parameters (const std::string& filename);
 
-#endif 
+#endif // READER_H
