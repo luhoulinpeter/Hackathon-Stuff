@@ -20,6 +20,11 @@
 using namespace std;
 
 
+#define MODEL_COUNT thread::hardware_concurrency ()
+#define READER_COUNT thread::hardware_concurrency ()
+#define BATCH_SIZE 1024
+
+
 /**
  * Process all tensors in /tensors directory
 */
@@ -31,13 +36,13 @@ void process_directory (const string& tensors_path, int repeats = 1) {
     char* aux = new char [size + 1];
 
     // Initialized parameters
-    int model_count = thread::hardware_concurrency ();
+    int model_count = MODEL_COUNT;
     tq free_models = tq ();
-    int batch = 1024;
+    int batch = BATCH_SIZE;
     for (int i = 0; i < model_count; i ++) {
         free_models.push (new Model (batch));
     }
-    atomic_int free_readers = thread::hardware_concurrency ();
+    atomic_int free_readers = READER_COUNT;
 
     // Profiling
     long double avg = 0;
@@ -89,7 +94,7 @@ void process_directory (const string& tensors_path, int repeats = 1) {
         while (free_models.size () != model_count) {IDLE}
 
         avg += ELAPSED;
-        if (r % 100 == 1) { cout << "Completed " << r << " repeats" << endl; }
+        //if (r % 100 == 1) { cout << "Completed " << r << " repeats" << endl; }
     }
     cout << "Average directory processing time: " << avg / repeats << " milliseconds" << endl;
 
@@ -98,18 +103,18 @@ void process_directory (const string& tensors_path, int repeats = 1) {
     fout.tie ();
     fout << "image number,label" << '\n';
     for (int i = 1; i <= cnt; i ++) {
-        //fout << i << ',' << aux [i] << '\n';
+        fout << i << ',' << aux [i] << '\n';
     }
     fout.flush ();
     fout.close ();
 
     // Check correctness
-    int correct = 0;
-    for (int i = 1; i <= cnt; i ++) {
-        int res = 1 + (aux [i] > 96 ? (aux [i] - 97) * 2 + 1 : (aux [i] - 65) * 2);
-        if (res == (i - 1) % 52 + 1) { correct ++; }
-    }
-    cout << "Correct: " << correct << " out of " << cnt << endl;
+    // int correct = 0;
+    // for (int i = 1; i <= cnt; i ++) {
+    //     int res = 1 + (aux [i] > 96 ? (aux [i] - 97) * 2 + 1 : (aux [i] - 65) * 2);
+    //     if (res == (i - 1) % 52 + 1) { correct ++; }
+    // }
+    // cout << "Correct: " << correct << " out of " << cnt << endl;
 
     // Free allocated resources
     while (!free_models.empty ()) {
