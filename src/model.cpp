@@ -3,7 +3,7 @@
 #include "reader.h"
 #include <cmath>
 #include <thread>
-#include "timers.h"
+#include "helpers.h"
 
 
 /**
@@ -27,6 +27,7 @@ void Model::init () {
  * Takes number of neurons in this layers along with their weights and biases
  */
 void Model::add_layer (int neuron_count, double* weights, double* biases) {
+    if (current_layer_count == LAYERS) { return; }
     layers [current_layer_count] = {
         neuron_count,
         current_layer_count > 0 ? layers [current_layer_count - 1].neuron_count : INPUT,
@@ -88,6 +89,17 @@ void Model::relu (int layer) {
 
 
 /**
+ * Faster exponential function
+ * Works twice as fast as a regular one, but produces error the greater the number is
+ */
+inline double fexp (double a) noexcept (true) {
+    union { double d; long long x; } u;
+    u.x = (long long) (6497320848556798LL * a + 4606794787981043020);
+    return u.d;
+}
+
+
+/**
  * Activate the last layer using softmax
  */
 void Model::softmax () {
@@ -101,14 +113,14 @@ void Model::softmax () {
 
         // Calculate exp sum
         for (int i = 0; i < categories; i ++) {
-            exp_sum += exp (c_data [u * categories + i]);
+            exp_sum += fexp (c_data [u * categories + i]);
         }
 
         // Calculate output
         double max = 0;
         for (int i = 0; i < categories; i ++) {
             double& c_out = c_data [u * categories + i];
-            c_out = exp (c_out) / exp_sum;
+            c_out = fexp (c_out) / exp_sum;
             if (c_out > max) {
                 max = c_out;
                 outputs [u] = i;

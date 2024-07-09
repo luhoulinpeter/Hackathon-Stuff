@@ -117,4 +117,5 @@ void init_model (const string& wab) {
     Model::add_layer (25, weightsL5, biasesL5);
     Model::add_layer (40, weightsL6, biasesL6);
     Model::add_layer (52, weightsL7, biasesL7);
+    Model::add_layer (0, nullptr, nullptr);
 }

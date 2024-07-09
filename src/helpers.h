@@ -1,5 +1,5 @@
-#ifndef TIMERS_H
-#define TIMERS_H
+#ifndef HELPERS_H
+#define HELPERS_H
 
 #include <chrono>
 #include <thread>
@@ -10,4 +10,4 @@
 #define IDLE std::this_thread::sleep_for (std::chrono::nanoseconds (1));
 //#define IDLE ;
 
-#endif // TIMERS_H
+#endif // HELPERS_H

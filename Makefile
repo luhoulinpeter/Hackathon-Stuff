@@ -17,7 +17,7 @@ CPU_TARGET = $(BIN_DIR)/speed_cpu
 GPU_TARGET = $(BIN_DIR)/speed_gpu
 
 # Objects
-OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/tq.o $(BUILD_DIR)/reader.o
+OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/reader.o $(BUILD_DIR)/tq.o
 CPU_OBJS = $(OBJS) $(BUILD_DIR)/model.o
 GPU_OBJS = $(OBJS) $(BUILD_DIR)/model_gpu.o
 

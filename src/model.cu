@@ -3,7 +3,7 @@
 #include "reader.h"
 #include <cmath>
 #include <thread>
-#include "timers.h"
+#include "helpers.h"
 
 
 /**
@@ -21,12 +21,16 @@ void Model::init () {
     current_layer_count = 0;
 }
 
-
+#include<iostream>
 /**
  * Add a new layer to the model
  * Takes number of neurons in this layers along with their weights and biases
  */
 void Model::add_layer (int neuron_count, double* weights, double* biases) {
+    if (current_layer_count == LAYERS) {
+        cudaDeviceSynchronize ();
+        return;
+    }
     Layer& c_layer = layers [current_layer_count];
     
     // Initialize layer
@@ -39,8 +43,8 @@ void Model::add_layer (int neuron_count, double* weights, double* biases) {
     int b_biases = sizeof (double) * c_layer.neuron_count;
     cudaMalloc (&(c_layer.weights), b_weights);
     cudaMalloc (&(c_layer.biases), b_biases);
-    cudaMemcpy (c_layer.weights, weights, b_weights, cudaMemcpyHostToDevice);
-    cudaMemcpy (c_layer.biases, biases, b_biases, cudaMemcpyHostToDevice);
+    cudaMemcpyAsync (c_layer.weights, weights, b_weights, cudaMemcpyHostToDevice);
+    cudaMemcpyAsync (c_layer.biases, biases, b_biases, cudaMemcpyHostToDevice);
 
     // Free host weights and biases
     delete[] weights;
