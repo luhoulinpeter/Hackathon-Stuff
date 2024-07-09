@@ -1,4 +1,4 @@
-StartHack Hackathon HPC Neural Network on Alphabet Character Recognition
+StartHack Hackathon HPC Neural Network on Alphabetical Character Recognition
 ===========================================================
 
 **High Performance Computing Track Sponsered by QDX**
