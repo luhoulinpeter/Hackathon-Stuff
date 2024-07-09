@@ -1,6 +1,10 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#include <atomic>
+#include <string>
+#include "tq.h"
+
 /**
  * Neural network model class
 */
@@ -20,10 +24,17 @@ private:
 
     // Model data
     int batch_size;
+    int current_input;
+    std::atomic_int ready;
+    double* input;
     double** data;
+    double* expsums;
+    int* results;
+    int* outputs;
+    int* mappings;
 
     // Process the given layer in forward propagation
-    void process (int layer, double* input);
+    void process (int layer);
 
     // Activate the given layer output using ReLU
     void relu (int layer);
@@ -31,12 +42,8 @@ private:
     // Activate the last layer output using
     void softmax ();
 
-    // Return an output index array
-    int* select ();
-
 
 public:
-
     // Model initialization
     static void init ();
 
@@ -49,8 +56,14 @@ public:
     // The constuctor
     Model (int batch_size);
 
+    // Is model has all inputs filled in
+    bool is_ready ();
+
+    // Read tensor into input
+    void process_input (const std::string& filename, int pos, std::atomic_int* free_readers);
+
     // Forward pass
-    int* forward_pass (double* input);
+    void forward_pass (char* aux, tq* models, int sub_batch);
 
     // The destructor
     ~Model ();

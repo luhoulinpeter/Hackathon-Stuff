@@ -1,36 +1,16 @@
 #include "reader.h"
 #include "params.h"
+#include "model.h"
 #include <fstream>
 #include <sstream>
 
 using namespace std;
 
-/**
- * Parameters constructor
- * Allocates memory
-*/
-Parameters::Parameters () {
-    weightsL1 = new double [INPUT*L1];
-    weightsL2 = new double [L1*L2];
-    weightsL3 = new double [L2*L3];
-    weightsL4 = new double [L3*L4];
-    weightsL5 = new double [L4*L5];
-    weightsL6 = new double [L5*L6];
-    weightsL7 = new double [L6*L7];
-
-    biasesL1 = new double [L1];
-    biasesL2 = new double [L2];
-    biasesL3 = new double [L3];
-    biasesL4 = new double [L4];
-    biasesL5 = new double [L5];
-    biasesL6 = new double [L6];
-    biasesL7 = new double [L7];
-}
-
 
 /**
- * Parse a line to string
-*/
+ * Parse a line into an array
+ * Takes a line to be parse and array to insert parsed values into
+ */
 void parse_line (const string& line, double* values) {
     int count = 0;
     istringstream stream (line);
@@ -43,72 +23,99 @@ void parse_line (const string& line, double* values) {
 
 
 /**
- * Reads input values into an array
-*/
-double* read_input (const string& filename) {
+ * Read values from file to an array
+ * Takes a tensor filename, an input array,
+ * a pointer to "ready" variable in related model and to a number of free readers
+ */
+ void read_input (const string& filename, double* input, atomic_int* ready, atomic_int* free_readers) {
     ifstream file (filename);
     string line;
     getline (file, line);
     file.close ();
+    parse_line (line, input);
 
-    double* arr = new double [INPUT];
-    parse_line (line, arr);
-    return arr;
+    (*ready) ++;
+    (*free_readers) ++;
 }
 
 
 /**
- * Read weights and biases from file to parameters
- * Takes a weights filename and returns a Parameters structure with parsed values
+ * Model initialisation
 */
-Parameters* read_parameters (const string& filename) {
-    Parameters* parameters = new Parameters;
-    ifstream file (filename);
+void init_model (const string& wab) {
+    // Initialize weigts and biases
+    double* weightsL1 = new double [INPUT*L1];
+    double* weightsL2 = new double [L1*L2];
+    double* weightsL3 = new double [L2*L3];
+    double* weightsL4 = new double [L3*L4];
+    double* weightsL5 = new double [L4*L5];
+    double* weightsL6 = new double [L5*L6];
+    double* weightsL7 = new double [L6*L7];
+
+    double* biasesL1 = new double [L1];
+    double* biasesL2 = new double [L2];
+    double* biasesL3 = new double [L3];
+    double* biasesL4 = new double [L4];
+    double* biasesL5 = new double [L5];
+    double* biasesL6 = new double [L6];
+    double* biasesL7 = new double [L7];
+    
+    // Read weights and biases
+    ifstream file (wab);
     string line;
     
     getline (file, line);
     getline (file, line);
-    parse_line (line, parameters -> weightsL1);
+    parse_line (line, weightsL1);
     getline (file, line);
     getline (file, line);
-    parse_line (line, parameters -> biasesL1);
+    parse_line (line, biasesL1);
     getline (file, line);
     getline (file, line);
-    parse_line (line, parameters -> weightsL2);
+    parse_line (line, weightsL2);
     getline (file, line);
     getline (file, line);
-    parse_line (line, parameters -> biasesL2);
+    parse_line (line, biasesL2);
     getline (file, line);
     getline (file, line);
-    parse_line (line, parameters -> weightsL3);
+    parse_line (line, weightsL3);
     getline (file, line);
     getline (file, line);
-    parse_line (line, parameters -> biasesL3);
+    parse_line (line, biasesL3);
     getline (file, line);
     getline (file, line);
-    parse_line (line, parameters -> weightsL4);
+    parse_line (line, weightsL4);
     getline (file, line);
     getline (file, line);
-    parse_line (line, parameters -> biasesL4);
+    parse_line (line, biasesL4);
     getline (file, line);
     getline (file, line);
-    parse_line (line, parameters -> weightsL5);
+    parse_line (line, weightsL5);
     getline (file, line);
     getline (file, line);
-    parse_line (line, parameters -> biasesL5);
+    parse_line (line, biasesL5);
     getline (file, line);
     getline (file, line);
-    parse_line (line, parameters -> weightsL6);
+    parse_line (line, weightsL6);
     getline (file, line);
     getline (file, line);
-    parse_line (line, parameters -> biasesL6);
+    parse_line (line, biasesL6);
     getline (file, line);
     getline (file, line);
-    parse_line (line, parameters -> weightsL7);
+    parse_line (line, weightsL7);
     getline (file, line);
     getline (file, line);
-    parse_line (line, parameters -> biasesL7);
+    parse_line (line, biasesL7);
 
     file.close ();
-    return parameters;
+
+    // Initialize model
+    Model::add_layer (98, weightsL1, biasesL1);
+    Model::add_layer (65, weightsL2, biasesL2);
+    Model::add_layer (50, weightsL3, biasesL3);
+    Model::add_layer (30, weightsL4, biasesL4);
+    Model::add_layer (25, weightsL5, biasesL5);
+    Model::add_layer (40, weightsL6, biasesL6);
+    Model::add_layer (52, weightsL7, biasesL7);
+    Model::add_layer (0, nullptr, nullptr);
 }

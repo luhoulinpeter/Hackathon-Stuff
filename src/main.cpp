@@ -8,107 +8,126 @@
 
 #include "reader.h"
 #include "model.h"
+#include "params.h"
+#include "tq.h"
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <filesystem>
-#include <chrono>
-#include <omp.h>
-#include <vector>
-
-#define NOW start = chrono::high_resolution_clock::now ()
-#define ELAPSED chrono::duration_cast <chrono::microseconds> (chrono::high_resolution_clock::now () - start).count () / 1000.0
+#include <thread>
+#include <atomic>
+#include "helpers.h"
 
 using namespace std;
 
 
-/**
- * Model initialisation
-*/
-void init_model () {
-    // Read weights and biases
-    Parameters* parameters = read_parameters ("weights_and_biases.txt");
+#define MODEL_COUNT thread::hardware_concurrency ()
+#define READER_COUNT thread::hardware_concurrency ()
+#define BATCH_SIZE 1024
 
-    // Initialize model
-    Model::add_layer (98, parameters -> weightsL1, parameters -> biasesL1);
-    Model::add_layer (65, parameters -> weightsL2, parameters -> biasesL2);
-    Model::add_layer (50, parameters -> weightsL3, parameters -> biasesL3);
-    Model::add_layer (30, parameters -> weightsL4, parameters -> biasesL4);
-    Model::add_layer (25, parameters -> weightsL5, parameters -> biasesL5);
-    Model::add_layer (40, parameters -> weightsL6, parameters -> biasesL6);
-    Model::add_layer (52, parameters -> weightsL7, parameters -> biasesL7);
-
-    delete parameters;
-}
-
-/**
- * Function to collect all file paths in the directory
-*/
-vector<string> collect_file_paths(const string& directory) {
-    vector<string> file_paths;
-    
-    for (const auto& entry : filesystem::directory_iterator(directory)) {
-        file_paths.push_back(entry.path().string());
-    }
-    return file_paths;
-}
 
 /**
  * Process all tensors in /tensors directory
 */
-void process_directory (Model& model, int repeats = 1) {
+void process_directory (const string& tensors_path, int repeats = 1) {
+    // Get the maximum number of files in directory
+    string tpath = (*filesystem::directory_iterator (tensors_path)).path ().string ();
+    int digits = tpath.size () - 8 - tensors_path.size (), cnt = 0;
+    int size = 1; for (int i = 0; i < digits; i ++, size *= 10);
+    char* aux = new char [size + 1];
 
-    string tensors_path = filesystem::current_path ().string () + "/tensors";
-    vector<string> file_paths = collect_file_paths(tensors_path);
-
-    int digits = file_paths[0].size () - 8 - tensors_path.size ();
-    int size = 1;
-    for (int i = 0; i < digits; i ++, size *= 10);
-    char* aux = new char [size];
-    int cnt;
+    // Initialized parameters
+    int model_count = MODEL_COUNT;
+    tq free_models = tq ();
+    int batch = BATCH_SIZE;
+    for (int i = 0; i < model_count; i ++) {
+        free_models.push (new Model (batch));
+    }
+    atomic_int free_readers = READER_COUNT;
 
     // Profiling
     long double avg = 0;
-    
-    for (int i = 0; i < repeats; i ++) {
+    for (int r = 0; r < repeats; r ++) {
         auto NOW;
-
-        // Processing every file in directory
-        cnt=1;
-        char letter;
-
-        for (size_t j = 0; j < file_paths.size(); j++) {
-            // Reading data and processing
-            string path = file_paths[j];
-            int* out = model.forward_pass (read_input (path));
-            int res = out [0];
-            delete[] out;
-            letter = res % 2 ? char (97 + res / 2) : char (65 + res / 2);
-
-            // Converting and saving the result
-            aux[stoi(path.substr(tensors_path.size() + 1, digits))] = letter;
-            
-            cnt ++;
-        }
         
-        avg += ELAPSED;
-        if (i % 100 == 1) { cout << "Completed " << i << " repeats" << endl; }
-    }
+        // Reset local values
+        cnt = 0;
+        int last_launch = 0;
+        auto it = filesystem::directory_iterator (tensors_path);
 
+        // Process every file in folder
+        while (true) {
+            string path = (*it).path ().string ();
+
+            // Wait for a free model
+            while (free_models.empty ()) {IDLE}
+            Model* current = (Model*) free_models.front ();
+
+            // If model input is fully assigned to readers, put it in a waiting mode and take the next one
+            if (current -> is_ready ()) {
+                free_models.pop ();
+                thread t (&Model::forward_pass, current, aux, &free_models, 0);
+                t.detach ();
+                last_launch = cnt;
+                
+                while (free_models.empty ()) {IDLE}
+                current = (Model*) free_models.front ();
+            }
+
+            // Wait for a free reader, then assign in to the part of current model input
+            while (free_readers == 0) {IDLE}
+            current -> process_input (path, stoi (path.substr (tensors_path.size () + 1, digits)), &free_readers);
+
+            it ++; cnt ++;
+            
+            // It was the file in folder, launch current model if hasn't done it yet
+            if (it == end (it)) {
+                if (last_launch != cnt) {
+                    free_models.pop ();
+                    thread t (&Model::forward_pass, current, aux, &free_models, cnt - last_launch);
+                    t.detach ();
+                }
+                break;
+            }
+        }
+
+        // Wait for all models to finish processing
+        while (free_models.size () != model_count) {IDLE}
+
+        avg += ELAPSED;
+        //if (r % 100 == 1) { cout << "Completed " << r << " repeats" << endl; }
+    }
     cout << "Average directory processing time: " << avg / repeats << " milliseconds" << endl;
 
     // Writing results to csv
     ofstream fout ("results.csv");
     fout.tie ();
     fout << "image number,label" << '\n';
-    for (int i = 1; i < cnt; i ++) {
+    for (int i = 1; i <= cnt; i ++) {
         fout << i << ',' << aux [i] << '\n';
     }
-
     fout.flush ();
     fout.close ();
+
+    // Check correctness
+    // int correct = 0;
+    // for (int i = 1; i <= cnt; i ++) {
+    //     int res = 1 + (aux [i] > 96 ? (aux [i] - 97) * 2 + 1 : (aux [i] - 65) * 2);
+    //     if (res == (i - 1) % 52 + 1) { correct ++; }
+    // }
+    // cout << "Correct: " << correct << " out of " << cnt << endl;
+
+    // Free allocated resources
+    while (!free_models.empty ()) {
+        delete (Model*) free_models.front ();
+        free_models.pop ();
+    }
     delete[] aux;
 }
+
+
+// Optimisations to try
+// Math:    multiple inputs (done, needs testing), faster exp
+// Mp:      multiprocessing vs threading
 
 /**
  * The main function
@@ -116,16 +135,22 @@ void process_directory (Model& model, int repeats = 1) {
 int main (int argc, char* argv []) {
     ios_base::sync_with_stdio (false);
 
+    // Initialize parameters
+    string wab = argc > 1 ? argv [1] : "weights_and_biases.txt";
+    string tensors_path = argc > 2 ? argv [2] : filesystem::current_path ().string () + "/tensors";
+    int repeats = argc > 3 ? atoi (argv [3]) : 1;
+
     // Initialize model
     auto NOW;
     Model::init ();
-    init_model ();
+    init_model (wab);
     cout << "Model initialized in " << ELAPSED << " milliseconds" << endl;
 
-    // Process directory (avg)
-    Model model (1);
-    process_directory (model, argc > 1 ? atoi (argv [1]) : 1);
+    // Process directory
+    process_directory (tensors_path, repeats);
     
+    // Free resources
     Model::free ();
+    
     return 0;
 }
