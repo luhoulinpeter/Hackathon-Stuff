@@ -20,7 +20,10 @@ The shell scripts for each implementations automatically links and compiles all 
 
 ## Optimisations
 - Matrices are stored/parsed as vectors
-- Use of multi-threading to improve time efficiency
+- Use of multi-threading on CPU and GPU
+- Fast approximation for exponential function
+- Processing multiple inputs as a matrix
+- Logic optimisations for parsing input functions
 
 ## Platform
 This code was written to be executed on:
