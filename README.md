@@ -10,6 +10,9 @@ This code includes two implementations of a Neural Network, based on pre-trained
 - CPU only
 - CPU & GPU
 
+## How to Run
+The shell scripts for each implementations automatically links and compiles all the files, runs the executible produced in /bin. 
+
 ## Dependencies 
 - CUDA version 12.5
 - OpenMP version 5.2
