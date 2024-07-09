@@ -1,6 +1,6 @@
 /**
  * @file main.cpp
- * @brief StartHack Hackathon HPC Neural Network on Character Recognition Sponsered by QDX
+ * @brief StartHack Hackathon HPC Neural Network on Alphabetical Character Recognition Sponsered by QDX
  * @authors Carlvince Tan, Lucas Yu, Peter Lu, Volodymyr Kazmirchuk
  * @date 2024
  * @copyright University of Melbourne
