@@ -15,8 +15,7 @@
 #include <filesystem>
 #include <thread>
 #include <atomic>
-
-#include "shortcuts.h"
+#include "timers.h"
 
 using namespace std;
 
@@ -24,10 +23,8 @@ using namespace std;
 /**
  * Process all tensors in /tensors directory
 */
-void process_directory (int repeats = 1) {
-    string tensors_path = filesystem::current_path ().string () + "/tensors";
-
-    // Get number of files in directory
+void process_directory (const string& tensors_path, int repeats = 1) {
+    // Get the maximum number of files in directory
     string tpath = (*filesystem::directory_iterator (tensors_path)).path ().string ();
     int digits = tpath.size () - 8 - tensors_path.size (), cnt = 0;
     int size = 1; for (int i = 0; i < digits; i ++, size *= 10);
@@ -36,7 +33,7 @@ void process_directory (int repeats = 1) {
     // Initialized parameters
     int model_count = 8;
     tq free_models = tq ();
-    int batch = 256;
+    int batch = 1024;
     for (int i = 0; i < model_count; i ++) {
         free_models.push (new Model (batch));
     }
@@ -133,15 +130,22 @@ void process_directory (int repeats = 1) {
 int main (int argc, char* argv []) {
     ios_base::sync_with_stdio (false);
 
+    // Initialize parameters
+    string wab = argc > 1 ? argv [1] : "weights_and_biases.txt";
+    string tensors_path = argc > 2 ? argv [2] : filesystem::current_path ().string () + "/tensors";
+    int repeats = argc > 3 ? atoi (argv [3]) : 1;
+
     // Initialize model
     auto NOW;
     Model::init ();
-    init_model ();
+    init_model (wab);
     cout << "Model initialized in " << ELAPSED << " milliseconds" << endl;
 
-    // Process directory (avg)
-    process_directory (argc > 1 ? atoi (argv [1]) : 1);
+    // Process directory
+    process_directory (tensors_path, repeats);
     
+    // Free resources
     Model::free ();
+    
     return 0;
 }

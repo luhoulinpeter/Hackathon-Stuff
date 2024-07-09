@@ -42,7 +42,7 @@ void parse_line (const string& line, double* values) {
 /**
  * Model initialisation
 */
-void init_model () {
+void init_model (const string& wab) {
     // Initialize weigts and biases
     double* weightsL1 = new double [INPUT*L1];
     double* weightsL2 = new double [L1*L2];
@@ -61,7 +61,7 @@ void init_model () {
     double* biasesL7 = new double [L7];
     
     // Read weights and biases
-    ifstream file ("weights_and_biases.txt");
+    ifstream file (wab);
     string line;
     
     getline (file, line);

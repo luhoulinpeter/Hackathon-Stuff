@@ -1,14 +1,20 @@
 #!/bin/bash
 
-if [ "$#" -ne 2 ]; then
-    echo "Usage: speed_cpu <relative_path_to_weights_and_biases.txt> <relative_path_to_input_tensor_directory>"
-    exit 1
+weights_and_biases="weights_and_biases.txt"
+input_tensor_dir="tensors"
+repeats=1
+
+if [ "$#" -ge 1 ]; then
+    weights_and_biases=$1
+fi
+if [ "$#" -ge 2 ]; then
+   input_tensor_dir=$2
+fi
+if [ "$#" -ge 3 ]; then
+   repeats=$3
 fi
 
-weights_and_biases=$1
-input_tensor_dir=$2
-
-binary="speed_cpu"
+binary="bin/speed_cpu"
 
 if [ ! -f "$binary" ]; then
     echo "Binary $binary not found!"
@@ -16,7 +22,7 @@ if [ ! -f "$binary" ]; then
 fi
 
 start_time=$(date +%s)
-./$binary "$weights_and_biases" "$input_tensor_dir"
+./$binary "$weights_and_biases" "$input_tensor_dir" "$repeats"
 
 end_time=$(date +%s)
 execution_time=$((end_time - start_time))
