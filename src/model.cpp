@@ -1,6 +1,7 @@
 #include "model.h"
 #include "params.h"
 #include <cmath>
+#include <cstdint>
 
 Model::Layer* Model::layers;
 int Model::current_layer_count;
@@ -77,6 +78,19 @@ void Model::relu (int layer) {
     }
 }
 
+
+/**
+ * exp() using bitshift
+ */
+inline float fast_exp(float x) {
+    union {
+        float f;
+        int32_t i;
+    } val = { x };
+
+    val.i = static_cast<int32_t>(12102203 * x + 1064866805);
+    return val.f;
+}
 
 /**
  * Activate the last layer using softmax
