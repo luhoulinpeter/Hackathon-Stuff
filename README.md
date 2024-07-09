@@ -11,19 +11,20 @@ This code includes two implementations of a Neural Network, based on pre-trained
 - CPU & GPU
 
 ## How to Run
-The shell scripts for each implementations automatically links and compiles all the files, runs the executible produced in /bin. 
+Run `make` first, which will assemble the project and create binaries in /bin directory.
+The shell scripts for each implementations runs the produced executable. 
 
 ## Dependencies 
 - CUDA version 12.5
-- OpenMP version 5.2
-- Eigen version 3.4.0
+- NVCC compiler with support of architecture 61
+- G++ compiler with support of C++ 17
 
 ## Optimisations
-- Matrices are stored/parsed as vectors
+- Matrices are stored/parsed as 1D arrays
 - Use of multi-threading on CPU and GPU
-- Fast approximation for exponential function
 - Processing multiple inputs as a matrix
 - Logic optimisations for parsing input functions
+- Fast approximation for exponential function
 
 ## Platform
 This code was written to be executed on:
