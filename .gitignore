@@ -1,0 +1,6 @@
+.vscode/
+bin/
+build/
+.DS_Store
+tensors_10k/
+tensors_100k/

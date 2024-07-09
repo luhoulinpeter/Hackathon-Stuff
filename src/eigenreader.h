@@ -1,8 +1,10 @@
 #ifndef READER_H
 #define READER_H
 
+#include <string>
+#include <filesystem>
 #include "params.h"
-#include <Eigen/Dense>
+#include "Dense"
 
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> MatrixXd;
 

@@ -1,7 +1,7 @@
 # Compiler
 CXX = g++
 # Compiler flags
-CXXFLAGS = -std=c++17 -Wall -Wextra -g -I /Users/peterlu/Desktop/EigenStuff -v   #O3 
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -I Eigen -v   #O3 
 # Executable name
 TARGET = speed_cpu
 # Directories

@@ -11,10 +11,9 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <filesystem>
 
 //#include <Eigen/Dense>
-
-
 
 /**
  * The main function
@@ -29,11 +28,12 @@ int main (int argc, char* argv []) {
     //reading in weights and biases
     read_weights_biases("weights_and_biases.txt", &weights, &biases);
 
+    std::string tensor_path = std::filesystem::current_path ().string () + "/tensors_10k";
     // reading inputs into batches
-    std::vector<input_batch> batches = read_inputs("/Users/peterlu/Desktop/EigenStuff/tensors");
+    std::vector<input_batch> batches = read_inputs(tensor_path);
 
     // passes in batches individuall, decrease batch_size, this part is for parallelisation
-    int num_input_files = collect_file_paths("/Users/peterlu/Desktop/EigenStuff/tensors").size()+1;
+    int num_input_files = collect_file_paths(tensor_path).size()+1;
     char *final_output = new char[num_input_files];
     for (size_t i=0; i<batches.size(); i++) {
         // passes inputs through all 7 layers of neural net, outputs raw output
