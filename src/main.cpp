@@ -31,13 +31,13 @@ void process_directory (const string& tensors_path, int repeats = 1) {
     char* aux = new char [size + 1];
 
     // Initialized parameters
-    int model_count = 8;
+    int model_count = thread::hardware_concurrency ();
     tq free_models = tq ();
     int batch = 1024;
     for (int i = 0; i < model_count; i ++) {
         free_models.push (new Model (batch));
     }
-    atomic_int free_readers = 8;
+    atomic_int free_readers = thread::hardware_concurrency ();
 
     // Profiling
     long double avg = 0;

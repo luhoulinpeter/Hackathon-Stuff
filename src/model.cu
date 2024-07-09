@@ -21,7 +21,7 @@ void Model::init () {
     current_layer_count = 0;
 }
 
-#include<iostream>
+
 /**
  * Add a new layer to the model
  * Takes number of neurons in this layers along with their weights and biases
@@ -42,8 +42,8 @@ void Model::add_layer (int neuron_count, double* weights, double* biases) {
     int b_weights = sizeof (double) * c_layer.input_count * c_layer.neuron_count;
     int b_biases = sizeof (double) * c_layer.neuron_count;
     cudaMalloc (&(c_layer.weights), b_weights);
-    cudaMalloc (&(c_layer.biases), b_biases);
     cudaMemcpyAsync (c_layer.weights, weights, b_weights, cudaMemcpyHostToDevice);
+    cudaMalloc (&(c_layer.biases), b_biases);
     cudaMemcpyAsync (c_layer.biases, biases, b_biases, cudaMemcpyHostToDevice);
 
     // Free host weights and biases
@@ -267,8 +267,8 @@ void Model::process_input (const std::string& filename, int pos, std::atomic_int
     mappings [current_input] = pos;
     std::thread t (read_input, filename, input + current_input * INPUT, &ready, free_readers);
     t.detach ();
-    (*free_readers) --;
     current_input ++;
+    (*free_readers) --;
 }
 
 
