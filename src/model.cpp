@@ -89,15 +89,17 @@ void Model::softmax () {
     // For each output in last layer from each batch
     for (int u = 0; u < batch_size; u ++) {
         double exp_sum = 0;
+        int offset = u * c_layer.neuron_count;
 
         // Calculate exp sum
         for (int i = 0; i < c_layer.neuron_count; i ++) {
-            exp_sum += exp (c_data [u * c_layer.neuron_count + i]);
+            c_data [offset + i] = exp (c_data [offset + i]);
+            exp_sum += c_data [offset + i];
         }
 
         // Divide exp of each output by the sum
         for (int i = 0; i < c_layer.neuron_count; i ++) {
-            c_data [i] = exp (c_data [u * c_layer.neuron_count + i]) / exp_sum;
+            c_data [i] = c_data [offset + i] / exp_sum;
         }
     }
 
